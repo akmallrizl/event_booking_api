@@ -1,0 +1,673 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Events | EventHub</title>
+    <link rel="stylesheet" href="style.css?v=3">
+
+    <style>
+        [hidden] {
+            display: none !important;
+        }
+
+        .events-page-header {
+            padding: 85px 20px 55px;
+            text-align: center;
+            background: linear-gradient(135deg, #260b10, #09090b 75%);
+            border-bottom: 1px solid #34343c;
+        }
+
+        .events-page-header span {
+            display: inline-block;
+            margin-bottom: 15px;
+            color: #ef4444;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .events-page-header h1 {
+            color: #fff;
+            font-size: clamp(36px, 5vw, 60px);
+            letter-spacing: -2px;
+        }
+
+        .events-page-header p {
+            margin-top: 15px;
+            color: #bcbcc6;
+        }
+
+        .events-section {
+            min-height: 55vh;
+        }
+
+        #bookingDialog {
+            width: min(94vw, 560px);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        #bookingQuantity {
+            width: 100%;
+            padding: 12px;
+            margin-top: 8px;
+            background: #18181d;
+            color: white;
+            border: 1px solid #44444c;
+            border-radius: 8px;
+            font: inherit;
+        }
+
+        #bookingQuantity:focus {
+            outline: 2px solid #ef4444;
+        }
+
+        .booking-total {
+            margin: 20px 0;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .booking-total strong {
+            color: #ef4444;
+        }
+
+        #bookingMessage {
+            margin: 12px 0;
+        }
+
+        #bookingMessage.error {
+            color: #fca5a5;
+        }
+
+        #bookingMessage.success {
+            color: #86efac;
+        }
+    </style>
+</head>
+
+<body>
+
+<nav class="navbar">
+    <a href="index.html" class="logo">EventHub</a>
+
+    <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="events.html">Events</a>
+        <a href="my-bookings.html">My Bookings</a>
+        <a href="login.html" id="loginNav">Login</a>
+
+        <button
+            type="button"
+            id="logoutButton"
+            class="btn btn-primary"
+            hidden
+        >
+            Logout
+        </button>
+    </div>
+</nav>
+
+<main>
+    <header class="events-page-header">
+        <span>Discover What's Next</span>
+
+        <h1>
+            Explore
+            <span style="font-size:inherit;letter-spacing:inherit;text-transform:none;">
+                Events
+            </span>
+        </h1>
+
+        <p>
+            Find your next unforgettable experience and secure your tickets.
+        </p>
+    </header>
+
+    <section class="events-section">
+        <h2>Upcoming Events</h2>
+        <p>Discover and explore our latest events.</p>
+
+        <div id="eventsContainer" class="events-grid">
+            <p>Loading events...</p>
+        </div>
+    </section>
+</main>
+
+<footer>
+    <p>&copy; 2026 EventHub. All rights reserved.</p>
+</footer>
+
+<dialog id="bookingDialog" aria-labelledby="bookingTitle">
+    <form id="bookingForm" class="booking-form">
+
+        <div class="dialog-heading">
+            <h2 id="bookingTitle">Book Tickets</h2>
+
+            <button
+                type="button"
+                id="closeBooking"
+                class="close-btn"
+                aria-label="Close booking form"
+            >
+                &times;
+            </button>
+        </div>
+
+        <p id="bookingEventName" class="booking-event-name"></p>
+
+        <p>
+            Ticket price:
+            <strong id="bookingUnitPrice"></strong>
+        </p>
+
+        <p>
+            Available tickets:
+            <strong id="bookingAvailable"></strong>
+        </p>
+
+        <div>
+            <label for="bookingQuantity">
+                Number of tickets
+            </label>
+
+            <input
+                type="number"
+                id="bookingQuantity"
+                min="1"
+                step="1"
+                value="1"
+                required
+            >
+        </div>
+
+        <p class="booking-total">
+            Total:
+            <strong id="bookingTotal">RM 0.00</strong>
+        </p>
+
+        <p
+            id="bookingMessage"
+            class="feedback"
+            role="status"
+            aria-live="polite"
+        ></p>
+
+        <button
+            type="submit"
+            id="confirmBooking"
+            class="btn btn-primary"
+        >
+            Confirm Booking
+        </button>
+
+    </form>
+</dialog>
+
+<script>
+const apiBase = "../api/";
+
+const eventsContainer =
+    document.getElementById("eventsContainer");
+
+const bookingDialog =
+    document.getElementById("bookingDialog");
+
+const bookingForm =
+    document.getElementById("bookingForm");
+
+const bookingQuantity =
+    document.getElementById("bookingQuantity");
+
+const bookingMessage =
+    document.getElementById("bookingMessage");
+
+const loginNav =
+    document.getElementById("loginNav");
+
+const logoutButton =
+    document.getElementById("logoutButton");
+
+const confirmBooking =
+    document.getElementById("confirmBooking");
+
+let selectedEvent = null;
+let loggedIn = false;
+let currentUser = null;
+let bookingInProgress = false;
+
+function setMessage(element, message, error = false) {
+    element.textContent = message;
+
+    element.classList.toggle("error", error);
+
+    element.classList.toggle(
+        "success",
+        !error && Boolean(message)
+    );
+}
+
+function money(value) {
+    return "RM " + Number(value || 0).toLocaleString(
+        "en-MY",
+        {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }
+    );
+}
+
+function detail(label, value) {
+    const p = document.createElement("p");
+    const strong = document.createElement("strong");
+
+    strong.textContent = label + ": ";
+
+    p.append(
+        strong,
+        document.createTextNode(String(value ?? "N/A"))
+    );
+
+    return p;
+}
+
+async function getJson(url, options = {}) {
+    const response = await fetch(url, {
+        credentials: "same-origin",
+        cache: "no-store",
+        ...options
+    });
+
+    const text = await response.text();
+
+    let result;
+
+    try {
+        result = JSON.parse(text);
+    } catch {
+        throw new Error(
+            "Invalid server response. Please check the API."
+        );
+    }
+
+    return { response, result };
+}
+
+function updateAuthUI() {
+    loginNav.hidden = loggedIn;
+    logoutButton.hidden = !loggedIn;
+}
+
+async function checkSession() {
+    try {
+        const { response, result } = await getJson(
+            apiBase + "session.php"
+        );
+
+        loggedIn = Boolean(
+            response.ok &&
+            result.success &&
+            result.logged_in
+        );
+
+        currentUser = loggedIn
+            ? (result.data || result.user || null)
+            : null;
+
+        updateAuthUI();
+
+    } catch (error) {
+        loggedIn = false;
+        currentUser = null;
+
+        updateAuthUI();
+
+        console.error("Session error:", error);
+    }
+}
+
+async function logout() {
+    logoutButton.disabled = true;
+    logoutButton.textContent = "Logging out...";
+
+    try {
+        const { response, result } = await getJson(
+            apiBase + "logout.php",
+            {
+                method: "POST",
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest"
+                }
+            }
+        );
+
+        if (!response.ok || !result.success) {
+            throw new Error(
+                result.message || "Logout failed."
+            );
+        }
+
+        window.location.assign("index.html");
+
+    } catch (error) {
+        alert(error.message || "Unable to log out.");
+
+    } finally {
+        logoutButton.disabled = false;
+        logoutButton.textContent = "Logout";
+    }
+}
+
+function updateTotal() {
+    if (!selectedEvent) return;
+
+    const quantity = Number(bookingQuantity.value);
+    const validQuantity =
+        Number.isSafeInteger(quantity) && quantity > 0
+            ? quantity
+            : 0;
+
+    const price = Number(selectedEvent.ticket_price);
+
+    document.getElementById("bookingTotal").textContent =
+        money(validQuantity * price);
+}
+
+function openBooking(eventData) {
+    if (!loggedIn) {
+        window.location.assign(
+            "login.html?next=events.html"
+        );
+        return;
+    }
+
+    if (currentUser?.role !== "customer") {
+        alert("Only customer accounts can book tickets.");
+        return;
+    }
+
+    selectedEvent = eventData;
+
+    const available = Number(
+        eventData.available_tickets
+    );
+
+    document.getElementById(
+        "bookingEventName"
+    ).textContent = eventData.event_name;
+
+    document.getElementById(
+        "bookingUnitPrice"
+    ).textContent = money(eventData.ticket_price);
+
+    document.getElementById(
+        "bookingAvailable"
+    ).textContent = String(available);
+
+    bookingQuantity.min = "1";
+    bookingQuantity.max = String(available);
+    bookingQuantity.value = "1";
+    bookingQuantity.disabled = false;
+
+    confirmBooking.disabled = false;
+    confirmBooking.textContent = "Confirm Booking";
+
+    setMessage(bookingMessage, "");
+
+    updateTotal();
+
+    bookingDialog.showModal();
+}
+
+async function loadEvents() {
+    try {
+        const { response, result } = await getJson(
+            apiBase + "events.php"
+        );
+
+        if (
+            !response.ok ||
+            !result.success ||
+            !Array.isArray(result.data)
+        ) {
+            throw new Error(
+                result.message || "Unable to load events"
+            );
+        }
+
+        eventsContainer.replaceChildren();
+
+        if (result.data.length === 0) {
+            eventsContainer.textContent =
+                "No events available.";
+            return;
+        }
+
+        result.data.forEach(item => {
+            const card = document.createElement("article");
+            card.className = "event-card";
+
+            const title = document.createElement("h3");
+            title.textContent = item.event_name;
+
+            const description = document.createElement("p");
+            description.textContent =
+                item.description || "";
+
+            card.append(
+                title,
+                description,
+                detail("Date", item.event_date),
+                detail("Time", item.event_time),
+                detail("Venue", item.venue_name),
+                detail("Location", item.location),
+                detail(
+                    "Ticket Price",
+                    money(item.ticket_price)
+                ),
+                detail(
+                    "Available Tickets",
+                    item.available_tickets
+                )
+            );
+
+            const button = document.createElement("button");
+
+            button.type = "button";
+            button.className = "btn btn-primary";
+
+            const available = Number(
+                item.available_tickets
+            );
+
+            const bookable =
+                item.status === "upcoming" &&
+                available > 0;
+
+            button.textContent = bookable
+                ? "Book Now"
+                : "Unavailable";
+
+            button.disabled = !bookable;
+
+            button.addEventListener(
+                "click",
+                () => openBooking(item)
+            );
+
+            card.appendChild(button);
+            eventsContainer.appendChild(card);
+        });
+
+    } catch (error) {
+        eventsContainer.textContent =
+            "Unable to load events. Please try again.";
+
+        console.error("Events error:", error);
+    }
+}
+
+bookingForm.addEventListener(
+    "submit",
+    async function(event) {
+        event.preventDefault();
+
+        if (
+            !selectedEvent ||
+            !loggedIn ||
+            bookingInProgress
+        ) {
+            return;
+        }
+
+        if (currentUser?.role !== "customer") {
+            setMessage(
+                bookingMessage,
+                "Only customers can create bookings.",
+                true
+            );
+            return;
+        }
+
+        const quantity = Number(bookingQuantity.value);
+        const available = Number(
+            selectedEvent.available_tickets
+        );
+
+        if (
+            !Number.isSafeInteger(quantity) ||
+            quantity < 1 ||
+            quantity > available
+        ) {
+            setMessage(
+                bookingMessage,
+                "Enter a valid ticket quantity.",
+                true
+            );
+            return;
+        }
+
+        bookingInProgress = true;
+        confirmBooking.disabled = true;
+
+        setMessage(
+            bookingMessage,
+            "Creating booking..."
+        );
+
+        const payload = {
+            event_id: Number(selectedEvent.event_id),
+            quantity: quantity
+        };
+
+        try {
+            const { response, result } = await getJson(
+                apiBase + "bookings.php",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-Requested-With": "XMLHttpRequest"
+                    },
+                    body: JSON.stringify(payload)
+                }
+            );
+
+            if (!response.ok || !result.success) {
+                if (response.status === 401) {
+                    window.location.assign(
+                        "login.html?next=events.html"
+                    );
+                    return;
+                }
+
+                throw new Error(
+                    result.message || "Booking failed."
+                );
+            }
+
+            const bookingId =
+                result.data?.booking_id ??
+                result.booking_id ??
+                "N/A";
+
+            setMessage(
+                bookingMessage,
+                "Booking confirmed! Your booking ID is " +
+                bookingId + "."
+            );
+
+            await loadEvents();
+
+            confirmBooking.textContent =
+                "Booking Confirmed";
+
+            setTimeout(() => {
+                if (bookingDialog.open) {
+                    bookingDialog.close();
+                }
+            }, 1800);
+
+        } catch (error) {
+            setMessage(
+                bookingMessage,
+                error.message ||
+                "Unable to create booking.",
+                true
+            );
+
+            confirmBooking.disabled = false;
+
+        } finally {
+            bookingInProgress = false;
+        }
+    }
+);
+
+document.getElementById(
+    "closeBooking"
+).addEventListener("click", () => {
+    if (!bookingInProgress) {
+        bookingDialog.close();
+    }
+});
+
+bookingDialog.addEventListener("cancel", event => {
+    if (bookingInProgress) {
+        event.preventDefault();
+    }
+});
+
+bookingDialog.addEventListener("close", () => {
+    selectedEvent = null;
+
+    confirmBooking.textContent = "Confirm Booking";
+    confirmBooking.disabled = false;
+
+    setMessage(bookingMessage, "");
+});
+
+bookingQuantity.addEventListener(
+    "input",
+    updateTotal
+);
+
+logoutButton.addEventListener(
+    "click",
+    logout
+);
+
+document.addEventListener(
+    "DOMContentLoaded",
+    async () => {
+        await checkSession();
+        await loadEvents();
+    }
+);
+</script>
+
+</body>
+</html>

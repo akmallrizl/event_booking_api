@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Booking Management | Event Booking System</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- =========================
+         NAVBAR
+    ========================== -->
+    <header class="navbar">
+
+        <div class="nav-container">
+
+            <h2 class="logo">
+                Event Booking System
+            </h2>
+
+            <nav class="nav-links">
+
+                <a href="admin-dashboard.html">
+                    Dashboard
+                </a>
+
+                <a href="admin-events.html">
+                    Events
+                </a>
+
+                <a href="admin-users.html">
+                    Users
+                </a>
+
+                <a href="admin-bookings.html" class="active">
+                    Bookings
+                </a>
+
+                <button
+                    id="logoutBtn"
+                    class="logout-btn">
+                    Logout
+                </button>
+
+            </nav>
+
+        </div>
+
+    </header>
+
+
+    <!-- =========================
+         MAIN CONTENT
+    ========================== -->
+    <main class="admin-container">
+
+
+        <!-- =========================
+             PAGE HEADER
+        ========================== -->
+        <section class="admin-page-header">
+
+            <div>
+
+                <h1>
+                    Booking Management
+                </h1>
+
+                <p>
+                    View and manage customer bookings.
+                </p>
+
+            </div>
+
+
+            <div class="admin-profile">
+
+                <strong>
+                    System Administrator
+                </strong>
+
+                <span>
+                    Admin
+                </span>
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================
+             MESSAGE
+        ========================== -->
+        <div id="messageBox"></div>
+
+
+        <!-- =========================
+             BOOKING SECTION
+        ========================== -->
+        <section class="admin-section">
+
+
+            <!-- SECTION HEADER -->
+            <div class="section-header">
+
+                <div>
+
+                    <h2>
+                        All Bookings
+                    </h2>
+
+                    <p>
+                        Monitor all customer event bookings.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <!-- =========================
+                 FILTER
+            ========================== -->
+            <div class="booking-filter">
+
+
+                <div class="filter-group">
+
+                    <label for="statusFilter">
+                        Booking Status
+                    </label>
+
+                    <select id="statusFilter">
+
+                        <option value="">
+                            All Status
+                        </option>
+
+                        <option value="confirmed">
+                            Confirmed
+                        </option>
+
+                        <option value="pending">
+                            Pending
+                        </option>
+
+                        <option value="cancelled">
+                            Cancelled
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <button
+                    id="refreshBtn"
+                    class="primary-btn">
+
+                    Refresh
+
+                </button>
+
+            </div>
+
+
+            <!-- =========================
+                 BOOKING LIST
+            ========================== -->
+            <div
+                id="bookingsContainer"
+                class="booking-grid">
+
+                <p>
+                    Loading bookings...
+                </p>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- ==========================================
+         AUTHENTICATION / ADMIN PROTECTION
+    =========================================== -->
+
+    <script src="auth.js"></script>
+
+    <script>
+        requireRole("admin");
+    </script>
+
+
+    <!-- ==========================================
+         ADMIN BOOKING JAVASCRIPT
+    =========================================== -->
+
+    <script src="admin-bookings.js"></script>
+
+
+</body>
+
+</html>

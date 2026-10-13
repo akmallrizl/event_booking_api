@@ -1,0 +1,461 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Check-In | EventHub</title>
+    <link rel="stylesheet" href="style.css?v=3">
+
+    <style>
+        [hidden] {
+            display: none !important;
+        }
+
+        body {
+            background: #09090b;
+            color: #fff;
+        }
+
+        .scan-page {
+            min-height: 80vh;
+            padding: 100px 20px 60px;
+        }
+
+        .scan-wrapper {
+            max-width: 650px;
+            margin: 0 auto;
+        }
+
+        .scan-heading {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        .scan-heading h1 {
+            font-size: clamp(32px, 5vw, 52px);
+            color: #fff;
+        }
+
+        .scan-heading h1 span {
+            color: #ef4444;
+        }
+
+        .scan-heading p {
+            margin-top: 12px;
+            color: #bcbcc6;
+        }
+
+        .scan-card,
+        .ticket-result {
+            background: #1b1b20;
+            border: 1px solid #383840;
+            border-radius: 20px;
+            padding: 28px;
+        }
+
+        .scan-card label {
+            display: block;
+            margin-bottom: 12px;
+            font-weight: 700;
+        }
+
+        .scan-input {
+            width: 100%;
+            padding: 15px;
+            background: #101014;
+            color: #fff;
+            border: 1px solid #4b4b55;
+            border-radius: 10px;
+            font-size: 15px;
+            margin-bottom: 18px;
+            box-sizing: border-box;
+        }
+
+        .scan-input:focus {
+            outline: 2px solid #ef4444;
+            border-color: transparent;
+        }
+
+        .scan-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .scan-button {
+            flex: 1;
+            padding: 14px;
+            border: 0;
+            border-radius: 10px;
+            background: #dc2626;
+            color: #fff;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .scan-button.secondary {
+            background: #34343c;
+        }
+
+        .scan-button:hover:not(:disabled) {
+            filter: brightness(1.15);
+        }
+
+        .scan-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .message {
+            margin-top: 22px;
+            padding: 14px;
+            border-radius: 10px;
+            background: #27272a;
+        }
+
+        .message.success {
+            background: #123a2b;
+            color: #86efac;
+        }
+
+        .message.error {
+            background: #451a1a;
+            color: #fca5a5;
+        }
+
+        .ticket-result {
+            margin-top: 24px;
+        }
+
+        .ticket-result h2 {
+            color: #ef4444;
+            margin-bottom: 18px;
+        }
+
+        .ticket-result p {
+            margin: 12px 0;
+            color: #d4d4d8;
+            overflow-wrap: anywhere;
+        }
+
+        .ticket-result strong {
+            color: #fff;
+        }
+
+        .remaining {
+            font-size: 22px;
+            font-weight: 800;
+            color: #86efac;
+            margin-top: 20px;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 25px;
+            color: #f87171;
+            text-decoration: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="navbar">
+        <a href="index.html" class="logo">EventHub</a>
+
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="organiser.html">Organiser Dashboard</a>
+            <a href="scan-ticket.html">QR Check-In</a>
+        </div>
+    </nav>
+
+    <main class="scan-page">
+        <div class="scan-wrapper">
+
+            <header class="scan-heading">
+                <h1>Ticket <span>Check-In</span></h1>
+                <p>Verify customer tickets and manage event entry.</p>
+            </header>
+
+            <section class="scan-card">
+
+                <label for="ticketToken">Ticket QR Token</label>
+
+                <input
+                    id="ticketToken"
+                    class="scan-input"
+                    type="text"
+                    placeholder="Enter or paste the 64-character ticket token"
+                    autocomplete="off"
+                    spellcheck="false"
+                    maxlength="64"
+                >
+
+                <div class="scan-actions">
+
+                    <button
+                        type="button"
+                        id="verifyButton"
+                        class="scan-button secondary"
+                        disabled
+                    >
+                        Verify Ticket
+                    </button>
+
+                    <button
+                        type="button"
+                        id="checkinButton"
+                        class="scan-button"
+                        disabled
+                    >
+                        Check In 1 Attendee
+                    </button>
+
+                </div>
+
+                <p id="message" class="message" role="status">
+                    Checking organiser login...
+                </p>
+
+            </section>
+
+            <section id="ticketResult" class="ticket-result" hidden>
+
+                <h2>Ticket Details</h2>
+
+                <div id="ticketDetails"></div>
+
+                <p id="remainingEntries" class="remaining"></p>
+
+            </section>
+
+            <a href="organiser.html" class="back-link">
+                ← Back to Organiser Dashboard
+            </a>
+
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 EventHub. All rights reserved.</p>
+    </footer>
+
+    <script>
+        const apiBase = "../api/";
+
+        const tokenInput = document.getElementById("ticketToken");
+        const verifyButton = document.getElementById("verifyButton");
+        const checkinButton = document.getElementById("checkinButton");
+        const message = document.getElementById("message");
+        const ticketResult = document.getElementById("ticketResult");
+        const ticketDetails = document.getElementById("ticketDetails");
+        const remainingEntries =
+            document.getElementById("remainingEntries");
+
+        let authorised = false;
+        let verifiedToken = "";
+        let requestBusy = false;
+
+        function setMessage(text, type = "") {
+            message.textContent = text;
+            message.className = "message";
+
+            if (type) {
+                message.classList.add(type);
+            }
+        }
+
+        function addDetail(label, value) {
+            const p = document.createElement("p");
+            const strong = document.createElement("strong");
+
+            strong.textContent = label + ": ";
+
+            p.append(
+                strong,
+                document.createTextNode(String(value ?? "N/A"))
+            );
+
+            ticketDetails.appendChild(p);
+        }
+
+        function updateButtons() {
+            verifyButton.disabled = !authorised || requestBusy;
+
+            checkinButton.disabled =
+                !authorised ||
+                requestBusy ||
+                !verifiedToken ||
+                Number(checkinButton.dataset.remaining || 0) <= 0;
+        }
+
+        function clearVerification() {
+            verifiedToken = "";
+            checkinButton.dataset.remaining = "0";
+            ticketResult.hidden = true;
+            ticketDetails.replaceChildren();
+            remainingEntries.textContent = "";
+
+            updateButtons();
+        }
+
+        async function checkSession() {
+            try {
+                const response = await fetch(
+                    apiBase + "session.php",
+                    {
+                        credentials: "same-origin",
+                        cache: "no-store"
+                    }
+                );
+
+                const result = await response.json();
+
+                authorised = Boolean(
+                    response.ok &&
+                    result.success &&
+                    result.logged_in &&
+                    result.data?.role === "organiser"
+                );
+
+                if (!authorised) {
+                    setMessage(
+                        "Please log in as an organiser to verify tickets.",
+                        "error"
+                    );
+                } else {
+                    setMessage(
+                        "Enter a ticket token to begin verification."
+                    );
+                }
+
+            } catch (error) {
+                authorised = false;
+
+                setMessage(
+                    "Unable to check organiser session.",
+                    "error"
+                );
+            }
+
+            updateButtons();
+        }
+
+        async function submitTicket(action) {
+            if (!authorised || requestBusy) {
+                return;
+            }
+
+            const token = tokenInput.value.trim().toLowerCase();
+
+            if (!/^[a-f0-9]{64}$/.test(token)) {
+                clearVerification();
+
+                setMessage(
+                    "Please enter a valid 64-character ticket token.",
+                    "error"
+                );
+
+                return;
+            }
+
+            if (action === "checkin" && token !== verifiedToken) {
+                clearVerification();
+
+                setMessage(
+                    "Ticket has changed. Verify it again.",
+                    "error"
+                );
+
+                return;
+            }
+
+            requestBusy = true;
+            updateButtons();
+
+            try {
+                const response = await fetch(
+                    apiBase + "ticket_checkin.php",
+                    {
+                        method: "POST",
+                        credentials: "same-origin",
+                        cache: "no-store",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-Requested-With": "XMLHttpRequest"
+                        },
+                        body: JSON.stringify({
+                            ticket_token: token,
+                            action: action
+                        })
+                    }
+                );
+
+                const result = await response.json();
+
+                if (!response.ok || !result.success) {
+                    clearVerification();
+
+                    throw new Error(
+                        result.message || "Ticket operation failed."
+                    );
+                }
+
+                const ticket = result.data;
+
+                ticketDetails.replaceChildren();
+
+                addDetail("Booking ID", "#" + ticket.booking_id);
+                addDetail("Event", ticket.event_name);
+                addDetail("Customer", ticket.customer_name);
+                addDetail("Date", ticket.event_date);
+                addDetail("Time", ticket.event_time);
+                addDetail("Tickets Booked", ticket.quantity);
+                addDetail(
+                    "Already Checked In",
+                    ticket.checked_in_quantity
+                );
+
+                remainingEntries.textContent =
+                    "Remaining Entries: " + ticket.remaining_entries;
+
+                ticketResult.hidden = false;
+
+                verifiedToken = token;
+
+                checkinButton.dataset.remaining =
+                    String(ticket.remaining_entries);
+
+                setMessage(result.message, "success");
+
+            } catch (error) {
+                setMessage(
+                    error.message || "Unable to process ticket.",
+                    "error"
+                );
+
+            } finally {
+                requestBusy = false;
+                updateButtons();
+            }
+        }
+
+        tokenInput.addEventListener("input", () => {
+            clearVerification();
+        });
+
+        verifyButton.addEventListener("click", () => {
+            submitTicket("verify");
+        });
+
+        checkinButton.addEventListener("click", () => {
+            submitTicket("checkin");
+        });
+
+        checkSession();
+    </script>
+
+</body>
+</html>

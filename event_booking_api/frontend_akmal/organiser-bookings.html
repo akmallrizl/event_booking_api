@@ -1,0 +1,487 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EventHub | Manage Bookings</title>
+
+<style>
+:root {
+    color-scheme: dark;
+    --bg: #09090b;
+    --surface: #18181d;
+    --border: #35353e;
+    --red: #dc2626;
+    --text: #f4f4f5;
+    --muted: #a1a1aa;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Segoe UI", Arial, sans-serif;
+    line-height: 1.5;
+}
+
+header {
+    padding: 24px 5%;
+    background: linear-gradient(120deg, #260c12, #111115 70%);
+    border-bottom: 1px solid #51252d;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+h1 { margin: 0; font-size: 28px; }
+h1 span { color: #ef4444; }
+
+header p { color: var(--muted); margin: 5px 0 0; }
+
+main {
+    max-width: 1250px;
+    margin: 35px auto;
+    padding: 0 20px;
+}
+
+a, button {
+    border: 1px solid #44444e;
+    border-radius: 9px;
+    padding: 10px 15px;
+    font: inherit;
+    font-weight: 700;
+    font-size: 14px;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.back {
+    background: #27272e;
+    color: white;
+}
+
+button.primary {
+    background: var(--red);
+    border-color: var(--red);
+    color: white;
+}
+
+button.secondary {
+    background: #27272e;
+    color: white;
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+section {
+    background: linear-gradient(150deg, #1d1d23, #151519);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 25px;
+    margin-bottom: 25px;
+}
+
+.toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+h2 { margin: 0; font-size: 23px; }
+
+input, select {
+    background: #101014;
+    border: 1px solid #44444c;
+    border-radius: 9px;
+    padding: 12px;
+    color: white;
+    font: inherit;
+}
+
+input { width: min(100%, 330px); }
+
+.table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 850px;
+}
+
+th, td {
+    padding: 14px 12px;
+    border-bottom: 1px solid #303038;
+    text-align: left;
+    font-size: 13px;
+}
+
+th { background: #292930; color: #fca5a5; }
+td { color: #d4d4d8; }
+
+tbody tr:nth-child(even) { background: #1d1d23; }
+
+#message {
+    display: none;
+    padding: 14px;
+    margin-bottom: 20px;
+    border-radius: 9px;
+    background: #351419;
+    color: #fecaca;
+    border: 1px solid #991b1b;
+}
+
+#qrSection[hidden] { display: none; }
+
+#qrSection { text-align: center; }
+
+#qrCode {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    padding: 18px;
+    border-radius: 12px;
+    margin: 20px auto;
+    max-width: 100%;
+}
+
+#qrCode img, #qrCode canvas {
+    max-width: 100%;
+}
+
+#ticketInfo {
+    margin: 15px auto;
+    max-width: 500px;
+    text-align: left;
+}
+
+.detail {
+    padding: 9px 0;
+    border-bottom: 1px solid #303038;
+    overflow-wrap: anywhere;
+}
+
+.detail strong { color: #fca5a5; }
+
+#ticketToken {
+    overflow-wrap: anywhere;
+    font-family: monospace;
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.qr-actions {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 18px;
+}
+
+@media (max-width: 650px) {
+    header { padding: 20px; }
+    section { padding: 18px; }
+}
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+
+<body>
+
+<header>
+    <div>
+        <h1>Event<span>Hub</span> | Manage Bookings</h1>
+        <p id="welcome">Checking organiser session...</p>
+    </div>
+
+    <a class="back" href="organiser.html">← Dashboard</a>
+</header>
+
+<main>
+    <div id="message" role="alert"></div>
+
+    <section>
+        <div class="toolbar">
+            <h2>Customer Bookings</h2>
+            <input
+                type="search"
+                id="searchInput"
+                placeholder="Search customer, event or booking ID"
+                aria-label="Search bookings"
+            >
+        </div>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Booking ID</th>
+                        <th>Customer</th>
+                        <th>Event</th>
+                        <th>Quantity</th>
+                        <th>Checked In</th>
+                        <th>Remaining</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="bookingsTable">
+                    <tr>
+                        <td colspan="8">Loading bookings...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section id="qrSection" hidden>
+        <h2>Booking QR Ticket</h2>
+        <div id="ticketInfo"></div>
+        <div id="qrCode"></div>
+        <p id="ticketToken"></p>
+
+        <div class="qr-actions">
+            <button class="secondary" id="copyButton" type="button">
+                Copy Ticket Token
+            </button>
+            <button class="primary" id="closeButton" type="button">
+                Close QR
+            </button>
+        </div>
+    </section>
+</main>
+
+<script>
+const API = "../api/";
+let bookings = [];
+let activeToken = "";
+
+const message = document.getElementById("message");
+const tbody = document.getElementById("bookingsTable");
+const searchInput = document.getElementById("searchInput");
+const qrSection = document.getElementById("qrSection");
+const qrCode = document.getElementById("qrCode");
+const ticketInfo = document.getElementById("ticketInfo");
+const ticketToken = document.getElementById("ticketToken");
+
+function showError(text) {
+    message.textContent = text;
+    message.style.display = "block";
+}
+
+function clearError() {
+    message.textContent = "";
+    message.style.display = "none";
+}
+
+function addDetail(label, value) {
+    const div = document.createElement("div");
+    div.className = "detail";
+
+    const strong = document.createElement("strong");
+    strong.textContent = label + ": ";
+
+    const span = document.createElement("span");
+    span.textContent = String(value ?? "");
+
+    div.append(strong, span);
+    ticketInfo.appendChild(div);
+}
+
+async function apiGet(path) {
+    const response = await fetch(API + path, {
+        credentials: "same-origin",
+        cache: "no-store"
+    });
+
+    const result = await response.json();
+
+    if (!response.ok || !result.success) {
+        throw new Error(result.message || "Request failed");
+    }
+
+    return result;
+}
+
+async function initialise() {
+    try {
+        const session = await apiGet("session.php");
+
+        if (session.logged_in !== true) {
+            throw new Error("Please log in first.");
+        }
+
+        const user = session.data || session.user || session;
+
+        if (user.role !== "organiser") {
+            throw new Error("Only organisers can view this page.");
+        }
+
+        document.getElementById("welcome").textContent =
+            "Welcome, " + (user.name || "Organiser");
+
+        const result = await apiGet("organiser_bookings.php");
+
+        bookings = Array.isArray(result.data) ? result.data : [];
+        renderBookings();
+
+    } catch (error) {
+        showError(error.message || "Unable to load bookings");
+        tbody.replaceChildren();
+
+        const row = tbody.insertRow();
+        const cell = row.insertCell();
+        cell.colSpan = 8;
+        cell.textContent = "Unable to load bookings.";
+    }
+}
+
+function renderBookings() {
+    const query = searchInput.value.trim().toLowerCase();
+
+    const filtered = bookings.filter(booking => {
+        const searchText = [
+            booking.booking_id,
+            booking.customer_name,
+            booking.event_name,
+            booking.booking_status
+        ].join(" ").toLowerCase();
+
+        return searchText.includes(query);
+    });
+
+    tbody.replaceChildren();
+
+    if (!filtered.length) {
+        const row = tbody.insertRow();
+        const cell = row.insertCell();
+        cell.colSpan = 8;
+        cell.textContent = "No bookings found.";
+        return;
+    }
+
+    filtered.forEach(booking => {
+        const row = tbody.insertRow();
+
+        const values = [
+            "#" + booking.booking_id,
+            booking.customer_name,
+            booking.event_name,
+            booking.quantity,
+            booking.checked_in_quantity,
+            booking.remaining_entries,
+            booking.booking_status
+        ];
+
+        values.forEach(value => {
+            row.insertCell().textContent = value ?? "";
+        });
+
+        const actionCell = row.insertCell();
+        const button = document.createElement("button");
+
+        button.className = "primary";
+        button.textContent = "View QR";
+        button.disabled = !booking.ticket_available;
+
+        button.addEventListener("click", () => {
+            showQr(booking);
+        });
+
+        actionCell.appendChild(button);
+    });
+}
+
+function showQr(booking) {
+    clearError();
+
+    if (
+        !booking.ticket_available ||
+        !/^[a-f0-9]{64}$/.test(booking.ticket_token || "")
+    ) {
+        showError("No valid QR ticket is available for this booking.");
+        return;
+    }
+
+    if (typeof QRCode === "undefined") {
+        showError("QR code library could not load. Check your internet connection.");
+        return;
+    }
+
+    activeToken = booking.ticket_token;
+
+    ticketInfo.replaceChildren();
+    qrCode.replaceChildren();
+
+    addDetail("Booking ID", "#" + booking.booking_id);
+    addDetail("Customer", booking.customer_name);
+    addDetail("Event", booking.event_name);
+    addDetail("Date", booking.event_date);
+    addDetail("Time", booking.event_time);
+    addDetail("Quantity", booking.quantity);
+    addDetail("Checked In", booking.checked_in_quantity);
+    addDetail("Remaining Entries", booking.remaining_entries);
+    addDetail("Status", booking.booking_status);
+
+    ticketToken.textContent = activeToken;
+
+    new QRCode(qrCode, {
+        text: activeToken,
+        width: 220,
+        height: 220,
+        correctLevel: QRCode.CorrectLevel.H
+    });
+
+    qrSection.hidden = false;
+    qrSection.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+    });
+}
+
+async function copyToken() {
+    if (!activeToken) return;
+
+    try {
+        await navigator.clipboard.writeText(activeToken);
+        alert("Ticket token copied successfully.");
+    } catch {
+        showError(
+            "Unable to copy automatically. Select the token shown below the QR code and copy it manually."
+        );
+    }
+}
+
+function closeQr() {
+    qrSection.hidden = true;
+    activeToken = "";
+    ticketInfo.replaceChildren();
+    qrCode.replaceChildren();
+    ticketToken.textContent = "";
+}
+
+searchInput.addEventListener("input", renderBookings);
+document.getElementById("copyButton").addEventListener("click", copyToken);
+document.getElementById("closeButton").addEventListener("click", closeQr);
+
+initialise();
+</script>
+
+</body>
+</html>

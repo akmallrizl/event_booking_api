@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Organiser Dashboard | Event Booking System</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- =========================
+         NAVBAR
+    ========================== -->
+    <header class="navbar">
+
+        <div class="nav-container">
+
+            <h2 class="logo">
+                Event Booking System
+            </h2>
+
+            <nav class="nav-links">
+
+                <a href="organiser-dashboard.html" class="active">
+                    Dashboard
+                </a>
+
+                <a href="organiser-events.html">
+                    My Events
+                </a>
+
+                <a href="organiser-bookings.html">
+                    Bookings
+                </a>
+
+                <button
+                    id="logoutBtn"
+                    class="logout-btn">
+                    Logout
+                </button>
+
+            </nav>
+
+        </div>
+
+    </header>
+
+
+    <!-- =========================
+         MAIN CONTENT
+    ========================== -->
+    <main class="admin-container">
+
+
+        <!-- =========================
+             PAGE HEADER
+        ========================== -->
+        <section class="admin-page-header">
+
+            <div>
+
+                <h1>
+                    Organiser Dashboard
+                </h1>
+
+                <p>
+                    Manage your events and monitor customer bookings.
+                </p>
+
+            </div>
+
+
+            <div class="admin-profile">
+
+                <strong id="organiserName">
+                    Organiser
+                </strong>
+
+                <span>
+                    Organiser
+                </span>
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================
+             DASHBOARD STATISTICS
+        ========================== -->
+        <section class="dashboard-stats">
+
+            <div class="stat-card">
+
+                <span>
+                    Total Events
+                </span>
+
+                <h2 id="totalEvents">
+                    0
+                </h2>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <span>
+                    Total Bookings
+                </span>
+
+                <h2 id="totalBookings">
+                    0
+                </h2>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <span>
+                    Confirmed Bookings
+                </span>
+
+                <h2 id="confirmedBookings">
+                    0
+                </h2>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <span>
+                    Total Revenue
+                </span>
+
+                <h2 id="totalRevenue">
+                    RM 0.00
+                </h2>
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================
+             QUICK ACTIONS
+        ========================== -->
+        <section class="admin-section">
+
+            <div class="section-header">
+
+                <div>
+
+                    <h2>
+                        Quick Actions
+                    </h2>
+
+                    <p>
+                        Manage your event operations.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="dashboard-actions">
+
+                <a
+                    href="organiser-events.html"
+                    class="action-card">
+
+                    <h3>
+                        My Events
+                    </h3>
+
+                    <p>
+                        View, create and manage your events.
+                    </p>
+
+                </a>
+
+
+                <a
+                    href="organiser-bookings.html"
+                    class="action-card">
+
+                    <h3>
+                        Customer Bookings
+                    </h3>
+
+                    <p>
+                        View bookings made for your events.
+                    </p>
+
+                </a>
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================
+             RECENT EVENTS
+        ========================== -->
+        <section class="admin-section">
+
+            <div class="section-header">
+
+                <div>
+
+                    <h2>
+                        My Recent Events
+                    </h2>
+
+                    <p>
+                        Events created by you.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div id="recentEvents">
+
+                <p>
+                    Loading events...
+                </p>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- ==========================================
+         AUTHENTICATION / ORGANISER PROTECTION
+    =========================================== -->
+
+    <script src="auth.js"></script>
+
+    <script>
+        requireRole("organiser");
+    </script>
+
+
+    <!-- ==========================================
+         ORGANISER DASHBOARD JAVASCRIPT
+    =========================================== -->
+
+    <script src="organiser-dashboard.js"></script>
+
+
+</body>
+
+</html>

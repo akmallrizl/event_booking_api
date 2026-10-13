@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Customer Bookings | Event Booking System</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- =========================
+         NAVBAR
+    ========================== -->
+    <header class="navbar">
+
+        <div class="nav-container">
+
+            <h2 class="logo">
+                Event Booking System
+            </h2>
+
+            <nav class="nav-links">
+
+                <a href="organiser-dashboard.html">
+                    Dashboard
+                </a>
+
+                <a href="organiser-events.html">
+                    My Events
+                </a>
+
+                <a href="organiser-bookings.html" class="active">
+                    Bookings
+                </a>
+
+                <button
+                    id="logoutBtn"
+                    class="logout-btn">
+                    Logout
+                </button>
+
+            </nav>
+
+        </div>
+
+    </header>
+
+
+    <!-- =========================
+         MAIN CONTENT
+    ========================== -->
+    <main class="admin-container">
+
+
+        <!-- =========================
+             PAGE HEADER
+        ========================== -->
+        <section class="admin-page-header">
+
+            <div>
+
+                <h1>
+                    Customer Bookings
+                </h1>
+
+                <p>
+                    View bookings made for your events.
+                </p>
+
+            </div>
+
+
+            <div class="admin-profile">
+
+                <strong id="organiserName">
+                    Organiser
+                </strong>
+
+                <span>
+                    Organiser
+                </span>
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================
+             MESSAGE
+        ========================== -->
+        <div id="messageBox"></div>
+
+
+        <!-- =========================
+             FILTER
+        ========================== -->
+        <section class="admin-section">
+
+            <div class="section-header">
+
+                <div>
+
+                    <h2>
+                        Booking Management
+                    </h2>
+
+                    <p>
+                        Filter bookings by your events.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="organiser-booking-filter">
+
+
+                <!-- EVENT FILTER -->
+                <div>
+
+                    <label for="eventFilter">
+                        Select Event
+                    </label>
+
+                    <select id="eventFilter">
+
+                        <option value="">
+                            All My Events
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- STATUS FILTER -->
+                <div>
+
+                    <label for="statusFilter">
+                        Booking Status
+                    </label>
+
+                    <select id="statusFilter">
+
+                        <option value="">
+                            All Status
+                        </option>
+
+                        <option value="confirmed">
+                            Confirmed
+                        </option>
+
+                        <option value="pending">
+                            Pending
+                        </option>
+
+                        <option value="cancelled">
+                            Cancelled
+                        </option>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================
+             BOOKING SUMMARY
+        ========================== -->
+        <section class="organiser-booking-stats">
+
+
+            <!-- TOTAL BOOKINGS -->
+            <div class="stat-card">
+
+                <span>
+                    Total Bookings
+                </span>
+
+                <strong id="totalBookings">
+                    0
+                </strong>
+
+            </div>
+
+
+            <!-- CONFIRMED BOOKINGS -->
+            <div class="stat-card">
+
+                <span>
+                    Confirmed
+                </span>
+
+                <strong id="confirmedBookings">
+                    0
+                </strong>
+
+            </div>
+
+
+            <!-- CANCELLED BOOKINGS -->
+            <div class="stat-card">
+
+                <span>
+                    Cancelled
+                </span>
+
+                <strong id="cancelledBookings">
+                    0
+                </strong>
+
+            </div>
+
+
+            <!-- TOTAL REVENUE -->
+            <div class="stat-card">
+
+                <span>
+                    Total Revenue
+                </span>
+
+                <strong id="totalRevenue">
+                    RM 0.00
+                </strong>
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================
+             BOOKINGS LIST
+        ========================== -->
+        <section class="admin-section">
+
+            <div class="section-header">
+
+                <div>
+
+                    <h2>
+                        Booking List
+                    </h2>
+
+                    <p>
+                        Customer bookings for your events.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div
+                id="bookingsContainer"
+                class="organiser-bookings-grid">
+
+                <p>
+                    Loading bookings...
+                </p>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- ==========================================
+         AUTHENTICATION / ORGANISER PROTECTION
+    =========================================== -->
+
+    <script src="auth.js"></script>
+
+    <script>
+        requireRole("organiser");
+    </script>
+
+
+    <!-- ==========================================
+         ORGANISER BOOKINGS JAVASCRIPT
+    =========================================== -->
+
+    <script src="organiser-bookings.js"></script>
+
+
+</body>
+
+</html>

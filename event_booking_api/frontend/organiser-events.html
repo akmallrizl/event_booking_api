@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>My Events | Event Booking System</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- =========================
+         NAVBAR
+    ========================== -->
+    <header class="navbar">
+
+        <div class="nav-container">
+
+            <h2 class="logo">
+                Event Booking System
+            </h2>
+
+            <nav class="nav-links">
+
+                <a href="organiser-dashboard.html">
+                    Dashboard
+                </a>
+
+                <a href="organiser-events.html" class="active">
+                    My Events
+                </a>
+
+                <a href="organiser-bookings.html">
+                    Bookings
+                </a>
+
+                <button
+                    id="logoutBtn"
+                    class="logout-btn">
+                    Logout
+                </button>
+
+            </nav>
+
+        </div>
+
+    </header>
+
+
+    <!-- =========================
+         MAIN CONTENT
+    ========================== -->
+    <main class="admin-container">
+
+
+        <!-- =========================
+             PAGE HEADER
+        ========================== -->
+        <section class="admin-page-header">
+
+            <div>
+
+                <h1>
+                    My Events
+                </h1>
+
+                <p>
+                    Create and manage your events.
+                </p>
+
+            </div>
+
+
+            <div class="admin-profile">
+
+                <strong id="organiserName">
+                    Organiser
+                </strong>
+
+                <span>
+                    Organiser
+                </span>
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================
+             MESSAGE
+        ========================== -->
+        <div id="messageBox"></div>
+
+
+        <!-- =========================
+             ADD EVENT BUTTON
+        ========================== -->
+        <div style="
+            display:flex;
+            justify-content:flex-end;
+            margin-bottom:20px;
+        ">
+
+            <button
+                id="addEventBtn"
+                class="primary-btn">
+
+                + Add New Event
+
+            </button>
+
+        </div>
+
+
+        <!-- =========================
+             EVENT FORM
+        ========================== -->
+        <section
+            id="eventFormSection"
+            class="admin-section"
+            style="display:none;"
+        >
+
+            <div class="section-header">
+
+                <div>
+
+                    <h2 id="formTitle">
+                        Add New Event
+                    </h2>
+
+                    <p>
+                        Enter the event information below.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <form id="eventForm">
+
+                <!-- EVENT ID -->
+                <input
+                    type="hidden"
+                    id="eventId"
+                >
+
+
+                <!-- EVENT NAME -->
+                <div class="form-group">
+
+                    <label for="eventName">
+                        Event Name
+                    </label>
+
+                    <input
+                        type="text"
+                        id="eventName"
+                        placeholder="Enter event name"
+                        required
+                    >
+
+                </div>
+
+
+                <!-- DESCRIPTION -->
+                <div class="form-group">
+
+                    <label for="description">
+                        Description
+                    </label>
+
+                    <textarea
+                        id="description"
+                        placeholder="Enter event description"
+                        rows="4"
+                        required
+                    ></textarea>
+
+                </div>
+
+
+                <!-- DATE + TIME -->
+                <div class="form-grid">
+
+                    <div class="form-group">
+
+                        <label for="eventDate">
+                            Event Date
+                        </label>
+
+                        <input
+                            type="date"
+                            id="eventDate"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="eventTime">
+                            Event Time
+                        </label>
+
+                        <input
+                            type="time"
+                            id="eventTime"
+                            required
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <!-- PRICE + TOTAL TICKETS -->
+                <div class="form-grid">
+
+                    <div class="form-group">
+
+                        <label for="ticketPrice">
+                            Ticket Price (RM)
+                        </label>
+
+                        <input
+                            type="number"
+                            id="ticketPrice"
+                            min="0"
+                            step="0.01"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="totalTickets">
+                            Total Tickets
+                        </label>
+
+                        <input
+                            type="number"
+                            id="totalTickets"
+                            min="1"
+                            required
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <!-- VENUE -->
+                <div class="form-group">
+
+                    <label for="venueId">
+                        Venue
+                    </label>
+
+                    <select
+                        id="venueId"
+                        required
+                    >
+
+                        <option value="">
+                            Select Venue
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- STATUS -->
+                <div class="form-group">
+
+                    <label for="status">
+                        Status
+                    </label>
+
+                    <select
+                        id="status"
+                        required
+                    >
+
+                        <option value="upcoming">
+                            Upcoming
+                        </option>
+
+                        <option value="completed">
+                            Completed
+                        </option>
+
+                        <option value="cancelled">
+                            Cancelled
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- FORM BUTTONS -->
+                <div style="
+                    display:flex;
+                    gap:10px;
+                    margin-top:20px;
+                ">
+
+                    <button
+                        type="submit"
+                        class="primary-btn">
+
+                        Save Event
+
+                    </button>
+
+
+                    <button
+                        type="button"
+                        id="cancelFormBtn"
+                        class="secondary-btn">
+
+                        Cancel
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </section>
+
+
+        <!-- =========================
+             MY EVENTS
+        ========================== -->
+        <section class="admin-section">
+
+            <div class="section-header">
+
+                <div>
+
+                    <h2>
+                        My Events
+                    </h2>
+
+                    <p>
+                        Events created by you.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div id="eventsContainer">
+
+                <p>
+                    Loading events...
+                </p>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- ==========================================
+         AUTHENTICATION / ORGANISER PROTECTION
+    =========================================== -->
+
+    <script src="auth.js"></script>
+
+    <script>
+        requireRole("organiser");
+    </script>
+
+
+    <!-- ==========================================
+         ORGANISER EVENTS JAVASCRIPT
+    =========================================== -->
+
+    <script src="organiser-events.js"></script>
+
+
+</body>
+
+</html>

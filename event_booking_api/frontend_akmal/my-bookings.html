@@ -1,0 +1,390 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Bookings | EventHub</title>
+    <link rel="stylesheet" href="style.css?v=3">
+    <style>
+        [hidden] { display: none !important; }
+
+        .page-header {
+            padding: 85px 20px 55px;
+            text-align: center;
+            background: linear-gradient(135deg, #260b10, #09090b 75%);
+            border-bottom: 1px solid #34343c;
+        }
+
+        .page-header h1 {
+            color: white;
+            font-size: clamp(36px, 5vw, 60px);
+            letter-spacing: -2px;
+        }
+
+        .page-header h1 span { color: #ef4444; }
+
+        .page-header p {
+            margin-top: 15px;
+            color: #bcbcc6;
+        }
+
+        .bookings-section {
+            min-height: 55vh;
+        }
+
+        .bookings-actions {
+            margin: 22px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <a href="index.html" class="logo">EventHub</a>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="events.html">Events</a>
+            <a href="my-bookings.html">My Bookings</a>
+            <a href="login.html" id="loginNav">Login</a>
+            <button type="button" id="logoutButton"
+                    class="btn btn-primary" hidden>Logout</button>
+        </div>
+    </nav>
+
+    <main>
+        <header class="page-header">
+            <h1>My <span>Bookings</span></h1>
+            <p>Manage your tickets and upcoming experiences.</p>
+        </header>
+
+        <section class="bookings-section">
+            <h2>Your Event Tickets</h2>
+            <p>View and manage all your bookings in one place.</p>
+
+            <div class="bookings-actions">
+                <button type="button" id="refreshBookings"
+                        class="btn btn-primary">
+                    Refresh My Bookings
+                </button>
+            </div>
+
+            <p id="bookingsMessage" class="feedback" role="status">
+                Checking login status...
+            </p>
+
+            <div id="bookingsContainer" class="bookings-grid"></div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 EventHub. All rights reserved.</p>
+    </footer>
+
+    <script>
+        const apiBase = "../api/";
+        const bookingsContainer =
+            document.getElementById("bookingsContainer");
+        const bookingsMessage =
+            document.getElementById("bookingsMessage");
+        const loginNav = document.getElementById("loginNav");
+        const logoutButton =
+            document.getElementById("logoutButton");
+
+        let loggedIn = false;
+        let currentUser = null;
+
+        function setMessage(element, message, error = false) {
+            element.textContent = message;
+            element.classList.toggle("error", error);
+            element.classList.toggle(
+                "success", !error && Boolean(message)
+            );
+        }
+
+        function money(value) {
+            return "RM " + Number(value || 0).toLocaleString(
+                "en-MY",
+                {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                }
+            );
+        }
+
+        function detail(label, value) {
+            const p = document.createElement("p");
+            const strong = document.createElement("strong");
+            strong.textContent = label + ": ";
+            p.append(
+                strong,
+                document.createTextNode(String(value ?? "N/A"))
+            );
+            return p;
+        }
+
+        async function getJson(url, options = {}) {
+            const response = await fetch(url, {
+                credentials: "same-origin",
+                cache: "no-store",
+                ...options
+            });
+            const result = await response.json();
+            return { response, result };
+        }
+
+        function updateAuthUI() {
+            loginNav.hidden = loggedIn;
+            logoutButton.hidden = !loggedIn;
+        }
+
+        async function checkSession() {
+            try {
+                const { response, result } = await getJson(
+                    apiBase + "session.php"
+                );
+
+                loggedIn = Boolean(
+                    response.ok && result.success && result.logged_in
+                );
+                currentUser = loggedIn ? result.data : null;
+
+                updateAuthUI();
+
+                if (!loggedIn) {
+                    bookingsContainer.replaceChildren();
+                    setMessage(
+                        bookingsMessage,
+                        "Please log in to view your bookings."
+                    );
+                    return;
+                }
+
+                if (currentUser?.role !== "customer") {
+                    setMessage(
+                        bookingsMessage,
+                        "My Bookings is available for customer accounts."
+                    );
+                    return;
+                }
+
+                await loadBookings();
+
+            } catch (error) {
+                setMessage(
+                    bookingsMessage,
+                    "Unable to check login status. Please refresh.",
+                    true
+                );
+                console.error("Session error:", error);
+            }
+        }
+
+        async function loadBookings() {
+            if (!loggedIn || currentUser?.role !== "customer") {
+                bookingsContainer.replaceChildren();
+                setMessage(
+                    bookingsMessage,
+                    "Please log in as a customer to view bookings."
+                );
+                return;
+            }
+
+            try {
+                const { response, result } = await getJson(
+                    apiBase + "bookings.php"
+                );
+
+                bookingsContainer.replaceChildren();
+
+                if (response.status === 401) {
+                    loggedIn = false;
+                    currentUser = null;
+                    updateAuthUI();
+                    setMessage(
+                        bookingsMessage,
+                        "Your session has expired. Please log in again.",
+                        true
+                    );
+                    return;
+                }
+
+                if (!response.ok || !result.success ||
+                    !Array.isArray(result.data)) {
+                    throw new Error(
+                        result.message || "Unable to load bookings."
+                    );
+                }
+
+                setMessage(
+                    bookingsMessage,
+                    result.data.length ? "" : "You have no bookings yet."
+                );
+
+                result.data.forEach(item => {
+                    const card = document.createElement("article");
+                    card.className = "booking-card";
+
+                    const title = document.createElement("h3");
+                    title.textContent = item.event_name;
+
+                    card.append(
+                        title,
+                        detail("Booking ID", item.booking_id),
+                        detail("Date", item.event_date),
+                        detail("Quantity", item.quantity),
+                        detail("Total", money(item.total_amount)),
+                        detail("Status", item.booking_status)
+                    );
+
+                    if (item.booking_status !== "cancelled") {
+                        
+if (item.booking_status === "confirmed" && item.ticket_token) {
+    const ticketButton = document.createElement("button");
+
+    ticketButton.type = "button";
+    ticketButton.className = "btn btn-primary";
+    ticketButton.textContent = "🎟 View QR Ticket";
+    ticketButton.style.marginTop = "15px";
+    ticketButton.style.marginRight = "10px";
+
+    ticketButton.addEventListener("click", () => {
+        window.location.href =
+            "ticket.html?id=" + encodeURIComponent(item.booking_id);
+    });
+
+    card.appendChild(ticketButton);
+}
+
+                        const cancelButton =
+                            document.createElement("button");
+
+                        cancelButton.type = "button";
+                        cancelButton.className = "btn btn-primary";
+                        cancelButton.textContent = "Cancel Booking";
+                        cancelButton.style.background = "#991b2b";
+                        cancelButton.style.marginTop = "15px";
+
+                        cancelButton.addEventListener(
+                            "click",
+                            () => cancelBooking(item, cancelButton)
+                        );
+
+                        card.appendChild(cancelButton);
+                    }
+
+                    bookingsContainer.appendChild(card);
+                });
+
+            } catch (error) {
+                setMessage(
+                    bookingsMessage,
+                    error.message || "Unable to load bookings.",
+                    true
+                );
+            }
+        }
+
+        async function cancelBooking(booking, button) {
+            if (!loggedIn || booking.booking_status === "cancelled") {
+                return;
+            }
+
+            const confirmed = window.confirm(
+                "Are you sure you want to cancel Booking #" +
+                booking.booking_id + " for " + booking.event_name + "?"
+            );
+
+            if (!confirmed) return;
+
+            button.disabled = true;
+            button.textContent = "Cancelling...";
+
+            try {
+                const { response, result } = await getJson(
+                    apiBase + "bookings.php?id=" +
+                    encodeURIComponent(booking.booking_id),
+                    {
+                        method: "PUT",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-Requested-With": "XMLHttpRequest"
+                        },
+                        body: JSON.stringify({
+                            quantity: Number(booking.quantity),
+                            booking_status: "cancelled"
+                        })
+                    }
+                );
+
+                if (!response.ok || !result.success) {
+                    if (response.status === 401) {
+                        loggedIn = false;
+                        currentUser = null;
+                        updateAuthUI();
+                    }
+
+                    throw new Error(
+                        result.message || "Unable to cancel booking."
+                    );
+                }
+
+                await loadBookings();
+
+                setMessage(
+                    bookingsMessage,
+                    "Booking #" + booking.booking_id +
+                    " cancelled successfully."
+                );
+
+            } catch (error) {
+                setMessage(
+                    bookingsMessage,
+                    error.message || "Cancellation failed.",
+                    true
+                );
+                button.disabled = false;
+                button.textContent = "Cancel Booking";
+            }
+        }
+
+        async function logout() {
+            logoutButton.disabled = true;
+            logoutButton.textContent = "Logging out...";
+
+            try {
+                const { response, result } = await getJson(
+                    apiBase + "logout.php",
+                    {
+                        method: "POST",
+                        headers: {
+                            "X-Requested-With": "XMLHttpRequest"
+                        }
+                    }
+                );
+
+                if (!response.ok || !result.success) {
+                    throw new Error(
+                        result.message || "Logout failed."
+                    );
+                }
+
+                window.location.assign("index.html");
+
+            } catch (error) {
+                alert(error.message || "Unable to log out.");
+            } finally {
+                logoutButton.disabled = false;
+                logoutButton.textContent = "Logout";
+            }
+        }
+
+        document.getElementById("refreshBookings")
+            .addEventListener("click", loadBookings);
+
+        logoutButton.addEventListener("click", logout);
+
+        document.addEventListener("DOMContentLoaded", checkSession);
+    </script>
+</body>
+</html>

@@ -1,0 +1,903 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EventHub | Organiser Dashboard</title>
+
+<style>
+:root {
+    color-scheme: dark;
+    --bg: #09090b;
+    --surface: #18181d;
+    --border: #35353e;
+    --red: #dc2626;
+    --text: #f4f4f5;
+    --muted: #a1a1aa;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+}
+
+header {
+    background: linear-gradient(120deg, #260c12, #111115 70%);
+    border-bottom: 1px solid #51252d;
+    padding: 25px 5%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+header h1 { margin: 0; font-size: 28px; }
+header h1 span { color: #ef4444; }
+header p { color: #bcbcc5; font-size: 14px; }
+
+.header-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+button, .header-link {
+    border: 1px solid transparent;
+    border-radius: 9px;
+    padding: 11px 16px;
+    cursor: pointer;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    transition: 0.2s;
+}
+
+button:hover, .header-link:hover { opacity: 0.85; }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.header-link {
+    text-decoration: none;
+    background: #27272e;
+    border-color: #44444e;
+    color: white;
+}
+
+.primary { background: var(--red); color: white; }
+
+.secondary {
+    background: #27272e;
+    color: white;
+    border-color: #44444e;
+}
+
+.danger {
+    background: #44161d;
+    color: #fecaca;
+    border-color: #7f1d1d;
+}
+
+#logoutButton { background: var(--red); color: white; }
+
+main {
+    max-width: 1300px;
+    margin: 35px auto 70px;
+    padding: 0 22px;
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(205px, 1fr));
+    gap: 17px;
+    margin-bottom: 27px;
+}
+
+.stat, section {
+    background: linear-gradient(150deg, #1d1d23, #151519);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 26px;
+    margin-bottom: 26px;
+}
+
+.stat {
+    position: relative;
+    overflow: hidden;
+}
+
+.stat::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #dc2626, #7f1d1d);
+}
+
+.stat span { color: var(--muted); font-size: 14px; }
+
+.stat strong {
+    display: block;
+    font-size: 35px;
+    margin-top: 12px;
+    color: white;
+}
+
+h2 { margin: 0 0 22px; font-size: 23px; }
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 19px;
+}
+
+.field label {
+    display: block;
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.field input, .field select, .field textarea {
+    width: 100%;
+    min-height: 44px;
+    border: 1px solid #44444c;
+    border-radius: 9px;
+    padding: 12px 13px;
+    font: inherit;
+    background: #101014;
+    color: white;
+}
+
+.field textarea { resize: vertical; }
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+    outline: 2px solid #ef4444;
+}
+
+.full { grid-column: 1 / -1; }
+
+.actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 23px;
+}
+
+.toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+}
+
+.toolbar h2 { margin: 0; }
+
+.toolbar select {
+    padding: 11px 15px;
+    background: #101014;
+    color: white;
+    border: 1px solid #44444c;
+    border-radius: 9px;
+}
+
+.table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 950px;
+}
+
+th, td {
+    padding: 15px 13px;
+    text-align: left;
+    border-bottom: 1px solid #303038;
+    font-size: 13px;
+}
+
+th {
+    background: #292930;
+    color: #fca5a5;
+}
+
+td { color: #d4d4d8; }
+tbody tr:nth-child(even) { background: #1d1d23; }
+tbody tr:hover { background: #27272e; }
+
+td button { padding: 8px 12px; margin: 3px; }
+
+small {
+    display: block;
+    margin-top: 7px;
+    color: var(--muted);
+}
+
+#message {
+    display: none;
+    padding: 15px 18px;
+    border-radius: 10px;
+    margin-bottom: 23px;
+    border: 1px solid;
+    font-weight: 600;
+}
+
+#message.success {
+    background: #10271d;
+    color: #86efac;
+    border-color: #166534;
+}
+
+#message.error {
+    background: #351419;
+    color: #fecaca;
+    border-color: #991b1b;
+}
+
+@media (max-width: 650px) {
+    header { padding: 22px 18px; }
+    main { padding: 0 14px; }
+    .form-grid { grid-template-columns: 1fr; }
+    .stat, section { padding: 20px; }
+    .header-actions { width: 100%; }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <div>
+        <h1>Event<span>Hub</span> | Organiser Dashboard</h1>
+        <p id="welcome">Checking your session...</p>
+    </div>
+
+    <div class="header-actions">
+        <a href="organiser-bookings.html"
+           class="header-link"
+           id="manageBookingsLink">
+            📋 Manage Bookings
+        </a>
+
+        <a href="scan-ticket.html"
+           class="header-link"
+           id="qrCheckinLink">
+            🎟 QR Check-In
+        </a>
+
+        <button id="logoutButton" type="button">
+            Logout
+        </button>
+    </div>
+</header>
+
+<main>
+
+<div id="message" role="alert"></div>
+
+<div class="stats">
+    <div class="stat">
+        <span>My Events</span>
+        <strong id="totalEvents">0</strong>
+    </div>
+
+    <div class="stat">
+        <span>Upcoming Events</span>
+        <strong id="upcomingEvents">0</strong>
+    </div>
+
+    <div class="stat">
+        <span>Available Tickets</span>
+        <strong id="availableTickets">0</strong>
+    </div>
+
+    <div class="stat">
+        <span>Booked Tickets</span>
+        <strong id="bookedTickets">0</strong>
+    </div>
+</div>
+
+<section>
+    <h2 id="formTitle">Create New Event</h2>
+
+    <form id="eventForm">
+        <div class="form-grid">
+
+            <div class="field">
+                <label for="eventName">Event Name</label>
+                <input id="eventName" maxlength="150" required>
+            </div>
+
+            <div class="field">
+                <label for="venueId">Venue</label>
+                <select id="venueId" required>
+                    <option value="">Select venue</option>
+                </select>
+            </div>
+
+            <div class="field full">
+                <label for="description">Description</label>
+                <textarea id="description" rows="3" required></textarea>
+            </div>
+
+            <div class="field">
+                <label for="eventDate">Event Date</label>
+                <input type="date" id="eventDate" required>
+            </div>
+
+            <div class="field">
+                <label for="eventTime">Event Time</label>
+                <input type="time" id="eventTime" required>
+            </div>
+
+            <div class="field">
+                <label for="ticketPrice">Ticket Price (RM)</label>
+                <input type="number"
+                       id="ticketPrice"
+                       min="0"
+                       step="0.01"
+                       required>
+            </div>
+
+            <div class="field">
+                <label for="totalTickets">Total Tickets</label>
+                <input type="number"
+                       id="totalTickets"
+                       min="1"
+                       step="1"
+                       required>
+                <small id="capacityHint"></small>
+            </div>
+
+            <div class="field full">
+                <label for="status">Event Status</label>
+                <select id="status">
+                    <option value="upcoming">Upcoming</option>
+                    <option value="ongoing">Ongoing</option>
+                    <option value="completed">Completed</option>
+                    <option value="cancelled">Cancelled</option>
+                </select>
+            </div>
+
+        </div>
+
+        <div class="actions">
+            <button class="primary" id="saveButton" type="submit">
+                Create Event
+            </button>
+
+            <button class="secondary"
+                    type="button"
+                    onclick="resetForm()">
+                Clear / Cancel Edit
+            </button>
+        </div>
+    </form>
+</section>
+
+<section>
+    <div class="toolbar">
+        <h2>My Events</h2>
+
+        <select id="filterStatus" onchange="renderEvents()">
+            <option value="all">All Events</option>
+            <option value="upcoming">Upcoming</option>
+            <option value="ongoing">Ongoing</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+        </select>
+    </div>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Event</th>
+                    <th>Date / Time</th>
+                    <th>Venue</th>
+                    <th>Price</th>
+                    <th>Total</th>
+                    <th>Available</th>
+                    <th>Booked</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+
+            <tbody id="eventsTable">
+                <tr>
+                    <td colspan="10">Loading events...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+</main>
+
+<script>
+const API = "../api/";
+
+let currentUser = null;
+let myEvents = [];
+let venues = [];
+let editingId = null;
+
+function showMessage(text, error = false) {
+    const el = document.getElementById("message");
+
+    el.textContent = text;
+    el.className = error ? "error" : "success";
+    el.style.display = "block";
+
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });
+}
+
+async function apiRequest(path, options = {}) {
+    const response = await fetch(API + path, {
+        credentials: "same-origin",
+        cache: "no-store",
+        ...options
+    });
+
+    const raw = await response.text();
+    let result;
+
+    try {
+        result = JSON.parse(raw);
+    } catch {
+        throw new Error(
+            "Invalid server response from " + path +
+            ". Check the PHP API."
+        );
+    }
+
+    if (!response.ok || result.success === false) {
+        throw new Error(
+            result.message || "Request failed"
+        );
+    }
+
+    return result;
+}
+
+async function checkSession() {
+    const result = await apiRequest("session.php");
+
+    if (result.logged_in === false) {
+        throw new Error("Please log in first.");
+    }
+
+    const user = result.user || result.data || result;
+
+    const role = user.role || result.role;
+    const id = user.user_id || result.user_id;
+    const name = user.name || result.name || "Organiser";
+
+    if (!id || !["organiser", "admin"].includes(role)) {
+        throw new Error(
+            "Please log in as an organiser or administrator"
+        );
+    }
+
+    currentUser = {
+        user_id: Number(id),
+        role: role,
+        name: name
+    };
+
+    document.getElementById("welcome").textContent =
+        "Welcome, " + name + " (" + role + ")";
+
+    document.getElementById("manageBookingsLink").style.display =
+        role === "organiser" ? "inline-block" : "none";
+
+    document.getElementById("qrCheckinLink").style.display =
+        role === "organiser" ? "inline-block" : "none";
+}
+
+async function loadVenues() {
+    const result = await apiRequest("venues.php");
+
+    venues = result.data || [];
+
+    const select = document.getElementById("venueId");
+
+    select.innerHTML =
+        '<option value="">Select venue</option>';
+
+    venues.forEach(venue => {
+        const option = document.createElement("option");
+
+        option.value = venue.venue_id;
+
+        option.textContent =
+            venue.venue_name + " — " +
+            venue.location +
+            " (Capacity: " + venue.capacity + ")";
+
+        select.appendChild(option);
+    });
+}
+
+async function loadEvents() {
+    const result = await apiRequest("events.php");
+
+    myEvents = (result.data || []).filter(event =>
+        currentUser.role === "admin" ||
+        Number(event.organiser_id) === currentUser.user_id
+    );
+
+    renderEvents();
+}
+
+function renderEvents() {
+    const filter = document.getElementById("filterStatus").value;
+
+    const filtered = myEvents.filter(event =>
+        filter === "all" || event.status === filter
+    );
+
+    document.getElementById("totalEvents").textContent =
+        myEvents.length;
+
+    document.getElementById("upcomingEvents").textContent =
+        myEvents.filter(e => e.status === "upcoming").length;
+
+    document.getElementById("availableTickets").textContent =
+        myEvents.reduce(
+            (sum, e) => sum + Number(e.available_tickets),
+            0
+        );
+
+    document.getElementById("bookedTickets").textContent =
+        myEvents.reduce(
+            (sum, e) =>
+                sum +
+                Number(e.total_tickets) -
+                Number(e.available_tickets),
+            0
+        );
+
+    const tbody = document.getElementById("eventsTable");
+
+    tbody.replaceChildren();
+
+    if (!filtered.length) {
+        const row = tbody.insertRow();
+        const cell = row.insertCell();
+
+        cell.colSpan = 10;
+        cell.textContent = "No events found.";
+        return;
+    }
+
+    filtered.forEach(event => {
+        const row = tbody.insertRow();
+
+        const values = [
+            event.event_id,
+            event.event_name,
+            event.event_date + " " + event.event_time,
+            event.venue_name,
+            "RM " + Number(event.ticket_price).toFixed(2),
+            event.total_tickets,
+            event.available_tickets,
+            Number(event.total_tickets) -
+                Number(event.available_tickets),
+            event.status
+        ];
+
+        values.forEach(value => {
+            row.insertCell().textContent = value;
+        });
+
+        const actions = row.insertCell();
+
+        const edit = document.createElement("button");
+        edit.textContent = "Edit";
+        edit.className = "primary";
+
+        edit.onclick = () =>
+            editEvent(Number(event.event_id));
+
+        const del = document.createElement("button");
+        del.textContent = "Delete";
+        del.className = "danger";
+
+        del.onclick = () =>
+            deleteEvent(Number(event.event_id));
+
+        actions.append(edit, del);
+    });
+}
+
+function editEvent(id) {
+    const event = myEvents.find(
+        e => Number(e.event_id) === id
+    );
+
+    if (!event) return;
+
+    editingId = id;
+
+    document.getElementById("eventName").value =
+        event.event_name;
+
+    document.getElementById("description").value =
+        event.description || "";
+
+    document.getElementById("venueId").value =
+        event.venue_id;
+
+    document.getElementById("eventDate").value =
+        event.event_date;
+
+    document.getElementById("eventTime").value =
+        event.event_time.substring(0, 5);
+
+    document.getElementById("ticketPrice").value =
+        event.ticket_price;
+
+    document.getElementById("totalTickets").value =
+        event.total_tickets;
+
+    document.getElementById("status").value =
+        event.status;
+
+    document.getElementById("formTitle").textContent =
+        "Edit Event #" + id;
+
+    document.getElementById("saveButton").textContent =
+        "Update Event";
+
+    updateCapacityHint();
+
+    document.getElementById("eventForm").scrollIntoView({
+        behavior: "smooth"
+    });
+}
+
+function resetForm() {
+    editingId = null;
+
+    document.getElementById("eventForm").reset();
+
+    document.getElementById("formTitle").textContent =
+        "Create New Event";
+
+    document.getElementById("saveButton").textContent =
+        "Create Event";
+
+    updateCapacityHint();
+}
+
+function updateCapacityHint() {
+    const id = Number(
+        document.getElementById("venueId").value
+    );
+
+    const venue = venues.find(
+        v => Number(v.venue_id) === id
+    );
+
+    document.getElementById("capacityHint").textContent =
+        venue
+            ? "Maximum venue capacity: " + venue.capacity
+            : "";
+}
+
+document.getElementById("venueId").addEventListener(
+    "change",
+    updateCapacityHint
+);
+
+document.getElementById("eventForm").addEventListener(
+    "submit",
+    async function(event) {
+        event.preventDefault();
+
+        const button = document.getElementById("saveButton");
+        button.disabled = true;
+
+        const payload = {
+            venue_id: Number(
+                document.getElementById("venueId").value
+            ),
+
+            event_name: document.getElementById(
+                "eventName"
+            ).value.trim(),
+
+            description: document.getElementById(
+                "description"
+            ).value.trim(),
+
+            event_date: document.getElementById(
+                "eventDate"
+            ).value,
+
+            event_time: document.getElementById(
+                "eventTime"
+            ).value,
+
+            ticket_price: Number(
+                document.getElementById("ticketPrice").value
+            ),
+
+            total_tickets: Number(
+                document.getElementById("totalTickets").value
+            ),
+
+            status: document.getElementById("status").value
+        };
+
+        const venue = venues.find(
+            v => Number(v.venue_id) === payload.venue_id
+        );
+
+        if (
+            venue &&
+            payload.total_tickets > Number(venue.capacity)
+        ) {
+            showMessage(
+                "Tickets exceed venue capacity.",
+                true
+            );
+
+            button.disabled = false;
+            return;
+        }
+
+        const wasEditing = editingId !== null;
+
+        try {
+            const path = wasEditing
+                ? "events.php?id=" + editingId
+                : "events.php";
+
+            await apiRequest(path, {
+                method: wasEditing ? "PUT" : "POST",
+
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-Requested-With": "XMLHttpRequest"
+                },
+
+                body: JSON.stringify(payload)
+            });
+
+            resetForm();
+            await loadEvents();
+
+            showMessage(
+                wasEditing
+                    ? "Event updated successfully."
+                    : "Event created successfully."
+            );
+
+        } catch (error) {
+            showMessage(error.message, true);
+
+        } finally {
+            button.disabled = false;
+        }
+    }
+);
+
+async function deleteEvent(id) {
+    const event = myEvents.find(
+        e => Number(e.event_id) === id
+    );
+
+    if (!event) return;
+
+    if (!confirm(
+        "Delete event: " + event.event_name + "?"
+    )) {
+        return;
+    }
+
+    try {
+        await apiRequest("events.php?id=" + id, {
+            method: "DELETE",
+
+            headers: {
+                "X-Requested-With": "XMLHttpRequest"
+            }
+        });
+
+        await loadEvents();
+
+        showMessage("Event deleted successfully.");
+
+    } catch (error) {
+        showMessage(error.message, true);
+    }
+}
+
+async function logout() {
+    const button = document.getElementById("logoutButton");
+
+    button.disabled = true;
+    button.textContent = "Logging out...";
+
+    try {
+        const result = await apiRequest("logout.php", {
+            method: "POST",
+
+            headers: {
+                "X-Requested-With": "XMLHttpRequest"
+            }
+        });
+
+        if (!result.success) {
+            throw new Error(
+                result.message || "Logout failed."
+            );
+        }
+
+        window.location.replace("index.html");
+
+    } catch (error) {
+        showMessage(
+            "Unable to log out: " + error.message,
+            true
+        );
+
+        button.disabled = false;
+        button.textContent = "Logout";
+    }
+}
+
+document.getElementById("logoutButton").addEventListener(
+    "click",
+    logout
+);
+
+async function initialise() {
+    try {
+        await checkSession();
+        await loadVenues();
+        await loadEvents();
+
+    } catch (error) {
+        showMessage(error.message, true);
+
+        document.getElementById("welcome").textContent =
+            "Access unavailable";
+
+        document.getElementById("saveButton").disabled = true;
+
+        document.getElementById("manageBookingsLink").style.display =
+            "none";
+
+        document.getElementById("qrCheckinLink").style.display =
+            "none";
+    }
+}
+
+initialise();
+</script>
+
+</body>
+</html>

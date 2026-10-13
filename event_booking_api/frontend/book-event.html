@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Book Event - Event Booking System</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- =========================
+         NAVBAR
+    ========================== -->
+    <nav class="navbar">
+
+        <div class="nav-container">
+
+            <h2>
+                Event Booking System
+            </h2>
+
+            <div class="nav-links">
+
+                <a href="events.html">
+                    Events
+                </a>
+
+                <a href="my-bookings.html">
+                    My Bookings
+                </a>
+
+                <button
+                    class="logout-btn"
+                    onclick="logout()">
+                    Logout
+                </button>
+
+            </div>
+
+        </div>
+
+    </nav>
+
+
+    <!-- =========================
+         MAIN CONTENT
+    ========================== -->
+    <main class="main-container">
+
+        <div class="booking-page">
+
+
+            <!-- BACK BUTTON -->
+            <a
+                href="events.html"
+                class="back-link">
+
+                ← Back to Events
+
+            </a>
+
+
+            <!-- =========================
+                 BOOKING CARD
+            ========================== -->
+            <div class="booking-card">
+
+                <h1>
+                    Book Event
+                </h1>
+
+                <p class="booking-subtitle">
+                    Complete your event booking below.
+                </p>
+
+
+                <!-- =========================
+                     LOADING EVENT
+                ========================== -->
+                <div id="loadingEvent">
+
+                    Loading event...
+
+                </div>
+
+
+                <!-- =========================
+                     EVENT DETAILS
+                ========================== -->
+                <div id="eventDetails"></div>
+
+
+                <!-- =========================
+                     BOOKING FORM
+                ========================== -->
+                <form
+                    id="bookingForm"
+                    style="display: none;">
+
+
+                    <!-- TICKET QUANTITY -->
+                    <div class="form-group">
+
+                        <label for="quantity">
+                            Number of Tickets
+                        </label>
+
+                        <input
+                            type="number"
+                            id="quantity"
+                            min="1"
+                            value="1"
+                            required
+                        >
+
+                    </div>
+
+
+                    <!-- =========================
+                         BOOKING SUMMARY
+                    ========================== -->
+                    <div class="booking-summary">
+
+
+                        <!-- PRICE -->
+                        <div>
+
+                            <span>
+                                Price per ticket
+                            </span>
+
+                            <strong id="ticketPrice">
+                                RM 0.00
+                            </strong>
+
+                        </div>
+
+
+                        <!-- QUANTITY -->
+                        <div>
+
+                            <span>
+                                Quantity
+                            </span>
+
+                            <strong id="summaryQuantity">
+                                1
+                            </strong>
+
+                        </div>
+
+
+                        <!-- TOTAL PRICE -->
+                        <div class="total-row">
+
+                            <span>
+                                Total
+                            </span>
+
+                            <strong id="totalPrice">
+                                RM 0.00
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- =========================
+                         CONFIRM BOOKING
+                    ========================== -->
+                    <button
+                        type="submit"
+                        class="confirm-booking-btn">
+
+                        Confirm Booking
+
+                    </button>
+
+                </form>
+
+
+                <!-- =========================
+                     BOOKING MESSAGE
+                ========================== -->
+                <div id="bookingMessage"></div>
+
+            </div>
+
+        </div>
+
+    </main>
+
+
+    <!-- ==========================================
+         AUTHENTICATION / CUSTOMER PROTECTION
+    =========================================== -->
+
+    <script src="auth.js"></script>
+
+    <script>
+        requireRole("customer");
+    </script>
+
+
+    <!-- ==========================================
+         BOOK EVENT JAVASCRIPT
+    =========================================== -->
+
+    <script src="book-event.js"></script>
+
+
+</body>
+
+</html>

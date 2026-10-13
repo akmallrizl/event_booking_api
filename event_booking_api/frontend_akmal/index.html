@@ -1,0 +1,510 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#09090b">
+    <title>EventHub | Discover Your Next Experience</title>
+    <link rel="stylesheet" href="style.css?v=3">
+
+    <style>
+        [hidden] {
+            display: none !important;
+        }
+
+        /* Homepage-specific design */
+        .landing-hero {
+            min-height: 82vh;
+            position: relative;
+            isolation: isolate;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 110px 24px;
+            overflow: hidden;
+            background:
+                radial-gradient(
+                    ellipse at 50% 100%,
+                    rgba(220, 38, 38, 0.35),
+                    transparent 60%
+                ),
+                radial-gradient(
+                    ellipse at 85% 10%,
+                    rgba(127, 29, 29, 0.24),
+                    transparent 45%
+                ),
+                #09090b;
+        }
+
+        .landing-hero::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            opacity: 0.25;
+            background-image:
+                linear-gradient(
+                    rgba(255, 255, 255, 0.08) 1px,
+                    transparent 1px
+                ),
+                linear-gradient(
+                    90deg,
+                    rgba(255, 255, 255, 0.08) 1px,
+                    transparent 1px
+                );
+            background-size: 60px 60px;
+            mask-image: linear-gradient(
+                to bottom,
+                transparent,
+                black
+            );
+        }
+
+        .eyebrow {
+            display: inline-block;
+            margin-bottom: 24px;
+            padding: 9px 17px;
+            border: 1px solid rgba(239, 68, 68, 0.35);
+            border-radius: 100px;
+            background: rgba(220, 38, 38, 0.09);
+            color: #fca5a5;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .landing-hero h1 {
+            max-width: 1000px;
+            color: white;
+            font-size: clamp(42px, 7vw, 88px);
+            line-height: 1.08;
+            letter-spacing: -3px;
+            font-weight: 900;
+            text-wrap: balance;
+        }
+
+        .accent {
+            color: #ef4444;
+        }
+
+        .landing-hero > p {
+            max-width: 670px;
+            margin-top: 28px;
+            color: #bcbcc6;
+            font-size: clamp(16px, 1.7vw, 19px);
+            line-height: 1.9;
+        }
+
+        .landing-actions {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 16px;
+            margin-top: 38px;
+        }
+
+        .landing-actions .btn {
+            min-width: 170px;
+        }
+
+        .section-heading {
+            max-width: 750px;
+            margin: 0 auto 48px;
+            text-align: center;
+        }
+
+        .section-label {
+            color: #ef4444;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+
+        .section-heading h2 {
+            color: white;
+            font-size: clamp(30px, 4vw, 45px);
+            line-height: 1.2;
+            letter-spacing: -1px;
+        }
+
+        .section-heading > p:last-child {
+            margin-top: 15px;
+            color: #a1a1aa;
+        }
+
+        .how-it-works {
+            padding: 100px 8%;
+            background: #101014;
+            border-top: 1px solid #27272d;
+            border-bottom: 1px solid #27272d;
+        }
+
+        .steps-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 24px;
+            max-width: 1150px;
+            margin: 0 auto;
+        }
+
+        .step-card {
+            padding: 35px 28px;
+            background: linear-gradient(
+                145deg,
+                #1d1d23,
+                #151518
+            );
+            border: 1px solid #34343c;
+            border-radius: 18px;
+            transition:
+                transform 0.25s ease,
+                border-color 0.25s ease;
+        }
+
+        .step-card:hover {
+            transform: translateY(-5px);
+            border-color: #dc2626;
+        }
+
+        .step-number {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            width: 53px;
+            height: 53px;
+            margin-bottom: 24px;
+            border-radius: 13px;
+            background: rgba(220, 38, 38, 0.15);
+            color: #f87171;
+            font-size: 20px;
+            font-weight: 900;
+        }
+
+        .step-card h3 {
+            color: #ffffff;
+            font-size: 21px;
+            margin-bottom: 12px;
+        }
+
+        .step-card p {
+            color: #a1a1aa;
+            font-size: 14px;
+            line-height: 1.8;
+        }
+
+        .experience-section {
+            padding: 100px 8%;
+            text-align: center;
+            background:
+                radial-gradient(
+                    ellipse at 50% 100%,
+                    rgba(185, 28, 28, 0.18),
+                    transparent 60%
+                ),
+                #09090b;
+        }
+
+        .experience-panel {
+            max-width: 1050px;
+            margin: 0 auto;
+            padding: 75px 35px;
+            border: 1px solid #543038;
+            border-radius: 24px;
+            background: linear-gradient(
+                135deg,
+                #251216,
+                #17171b 70%
+            );
+        }
+
+        .experience-panel h2 {
+            max-width: 680px;
+            margin: 0 auto;
+            color: #ffffff;
+            font-size: clamp(30px, 4.5vw, 51px);
+            line-height: 1.2;
+            letter-spacing: -1.5px;
+        }
+
+        .experience-panel p {
+            max-width: 600px;
+            margin: 20px auto 30px;
+            color: #bcbcc6;
+            line-height: 1.8;
+        }
+
+        @media (max-width: 750px) {
+            .steps-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .landing-hero {
+                min-height: 72vh;
+                padding: 90px 20px;
+            }
+
+            .landing-hero h1 {
+                letter-spacing: -1.5px;
+            }
+
+            .how-it-works,
+            .experience-section {
+                padding: 70px 20px;
+            }
+
+            .experience-panel {
+                padding: 55px 24px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- NAVIGATION -->
+    <nav class="navbar">
+        <a href="index.html" class="logo">EventHub</a>
+
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="events.html">Events</a>
+            <a href="my-bookings.html">My Bookings</a>
+
+            <a href="login.html" id="loginNav">Login</a>
+
+            <button
+                type="button"
+                id="logoutButton"
+                class="btn btn-primary"
+                hidden
+            >
+                Logout
+            </button>
+        </div>
+    </nav>
+
+    <main>
+
+        <!-- HERO -->
+        <section class="landing-hero">
+            <span class="eyebrow">
+                Discover. Experience. Remember.
+            </span>
+
+            <h1>
+                YOUR NEXT BIG
+                <span class="accent">EXPERIENCE</span>
+                STARTS HERE.
+            </h1>
+
+            <p>
+                From live concerts to inspiring conferences,
+                unforgettable moments are just one click away.
+                Discover amazing experiences and secure your
+                tickets with EventHub.
+            </p>
+
+            <div class="landing-actions">
+                <a href="events.html" class="btn btn-primary">
+                    Explore Events &rarr;
+                </a>
+
+                <a
+                    href="login.html"
+                    id="getStartedButton"
+                    class="btn btn-secondary"
+                >
+                    Get Started
+                </a>
+            </div>
+        </section>
+
+        <!-- HOW IT WORKS -->
+        <section class="how-it-works">
+            <div class="section-heading">
+                <p class="section-label">Simple &amp; Seamless</p>
+
+                <h2>
+                    Your Experience in
+                    <span class="accent">3 Easy Steps</span>
+                </h2>
+
+                <p>
+                    Finding and booking your next event
+                    has never been easier.
+                </p>
+            </div>
+
+            <div class="steps-grid">
+
+                <article class="step-card">
+                    <span class="step-number">01</span>
+
+                    <h3>Discover Events</h3>
+
+                    <p>
+                        Explore exciting concerts, conferences,
+                        workshops and other events happening
+                        around you.
+                    </p>
+                </article>
+
+                <article class="step-card">
+                    <span class="step-number">02</span>
+
+                    <h3>Book Your Tickets</h3>
+
+                    <p>
+                        Choose your favourite event,
+                        select the number of tickets,
+                        and confirm your booking easily.
+                    </p>
+                </article>
+
+                <article class="step-card">
+                    <span class="step-number">03</span>
+
+                    <h3>Enjoy the Experience</h3>
+
+                    <p>
+                        Keep track of your bookings
+                        and get ready to create
+                        unforgettable memories.
+                    </p>
+                </article>
+
+            </div>
+        </section>
+
+        <!-- CALL TO ACTION -->
+        <section class="experience-section">
+            <div class="experience-panel">
+                <p class="section-label">
+                    Don't Miss Out
+                </p>
+
+                <h2>
+                    GREAT EVENTS.
+                    <span class="accent">GREAT MEMORIES.</span>
+                </h2>
+
+                <p>
+                    Your next favourite experience is waiting.
+                    Explore upcoming events and find
+                    something worth remembering.
+                </p>
+
+                <a href="events.html" class="btn btn-primary">
+                    Discover Events &rarr;
+                </a>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer>
+        <p>
+            &copy; 2026 EventHub. All rights reserved.
+        </p>
+    </footer>
+
+    <script>
+        const apiBase = "../api/";
+
+        const loginNav =
+            document.getElementById("loginNav");
+
+        const logoutButton =
+            document.getElementById("logoutButton");
+
+        const getStartedButton =
+            document.getElementById("getStartedButton");
+
+        function updateNavigation(loggedIn) {
+            loginNav.hidden = loggedIn;
+            logoutButton.hidden = !loggedIn;
+            getStartedButton.hidden = loggedIn;
+        }
+
+        async function checkSession() {
+            try {
+                const response = await fetch(
+                    apiBase + "session.php",
+                    {
+                        credentials: "same-origin",
+                        cache: "no-store"
+                    }
+                );
+
+                const result = await response.json();
+
+                updateNavigation(
+                    response.ok &&
+                    result.success &&
+                    result.logged_in
+                );
+
+                // Always remain on homepage.
+                // Dashboard redirects happen after login.
+
+            } catch (error) {
+                console.error("Session error:", error);
+                updateNavigation(false);
+            }
+        }
+
+        async function logout() {
+            logoutButton.disabled = true;
+            logoutButton.textContent = "Logging out...";
+
+            try {
+                const response = await fetch(
+                    apiBase + "logout.php",
+                    {
+                        method: "POST",
+                        credentials: "same-origin",
+                        headers: {
+                            "X-Requested-With": "XMLHttpRequest"
+                        }
+                    }
+                );
+
+                const result = await response.json();
+
+                if (!response.ok || !result.success) {
+                    throw new Error(
+                        result.message || "Logout failed"
+                    );
+                }
+
+                updateNavigation(false);
+
+                window.location.assign("index.html");
+
+            } catch (error) {
+                alert(
+                    error.message || "Unable to log out."
+                );
+            } finally {
+                logoutButton.disabled = false;
+                logoutButton.textContent = "Logout";
+            }
+        }
+
+        logoutButton.addEventListener("click", logout);
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            checkSession
+        );
+    </script>
+
+</body>
+</html>

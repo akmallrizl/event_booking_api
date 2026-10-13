@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>User Management | Event Booking System</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- =========================
+         NAVBAR
+    ========================== -->
+    <header class="navbar">
+        <div class="nav-container">
+
+            <div class="logo">
+                Event Booking System
+            </div>
+
+            <nav class="admin-nav">
+
+                <a href="admin-dashboard.html">
+                    Dashboard
+                </a>
+
+                <a href="admin-events.html">
+                    Events
+                </a>
+
+                <a href="admin-users.html" class="active">
+                    Users
+                </a>
+
+                <button
+                    type="button"
+                    class="logout-btn"
+                    onclick="logout()">
+                    Logout
+                </button>
+
+            </nav>
+
+        </div>
+    </header>
+
+
+    <!-- =========================
+         MAIN CONTENT
+    ========================== -->
+    <main class="container">
+
+        <!-- PAGE HEADER -->
+        <div class="user-management-header">
+
+            <div>
+
+                <h1>
+                    User Management
+                </h1>
+
+                <p>
+                    View, create, update and manage system users.
+                </p>
+
+            </div>
+
+
+            <div class="admin-profile-box">
+
+                <strong id="adminName">
+                    System Administrator
+                </strong>
+
+                <span id="adminRole">
+                    Admin
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <!-- =========================
+             ADD USER BUTTON
+        ========================== -->
+        <div style="
+            display:flex;
+            justify-content:flex-end;
+            margin-bottom:20px;
+        ">
+
+            <button
+                type="button"
+                class="add-user-btn"
+                onclick="showAddUserForm()">
+
+                + Add New User
+
+            </button>
+
+        </div>
+
+
+        <!-- =========================
+             MESSAGE
+        ========================== -->
+        <div
+            id="messageBox"
+            style="display:none;">
+        </div>
+
+
+        <!-- =========================
+             ADD / EDIT USER FORM
+        ========================== -->
+        <section
+            id="userFormSection"
+            class="users-section"
+            style="
+                display:none;
+                margin-bottom:25px;
+            ">
+
+            <div style="
+                display:flex;
+                justify-content:space-between;
+                align-items:center;
+                margin-bottom:20px;
+            ">
+
+                <h2
+                    id="formTitle"
+                    style="margin:0;">
+
+                    Add New User
+
+                </h2>
+
+
+                <button
+                    type="button"
+                    onclick="closeUserForm()"
+                    style="
+                        border:none;
+                        background:#f1f4f7;
+                        width:35px;
+                        height:35px;
+                        border-radius:50%;
+                        cursor:pointer;
+                        font-size:18px;
+                        color:#667085;
+                    ">
+
+                    ×
+
+                </button>
+
+            </div>
+
+
+            <form id="userForm">
+
+                <!-- USER ID -->
+                <input
+                    type="hidden"
+                    id="userId"
+                >
+
+
+                <!-- =========================
+                     NAME
+                ========================== -->
+                <div style="margin-bottom:15px;">
+
+                    <label
+                        for="name"
+                        style="
+                            display:block;
+                            margin-bottom:7px;
+                            font-weight:600;
+                            color:#173b61;
+                        ">
+
+                        Full Name
+
+                    </label>
+
+
+                    <input
+                        type="text"
+                        id="name"
+                        placeholder="Enter full name"
+                        required
+                        style="
+                            width:100%;
+                            padding:12px;
+                            border:1px solid #d6dde5;
+                            border-radius:6px;
+                            box-sizing:border-box;
+                        "
+                    >
+
+                </div>
+
+
+                <!-- =========================
+                     EMAIL
+                ========================== -->
+                <div style="margin-bottom:15px;">
+
+                    <label
+                        for="email"
+                        style="
+                            display:block;
+                            margin-bottom:7px;
+                            font-weight:600;
+                            color:#173b61;
+                        ">
+
+                        Email
+
+                    </label>
+
+
+                    <input
+                        type="email"
+                        id="email"
+                        placeholder="example@email.com"
+                        required
+                        style="
+                            width:100%;
+                            padding:12px;
+                            border:1px solid #d6dde5;
+                            border-radius:6px;
+                            box-sizing:border-box;
+                        "
+                    >
+
+                </div>
+
+
+                <!-- =========================
+                     PASSWORD
+                ========================== -->
+                <div
+                    id="passwordGroup"
+                    style="margin-bottom:15px;"
+                >
+
+                    <label
+                        for="password"
+                        style="
+                            display:block;
+                            margin-bottom:7px;
+                            font-weight:600;
+                            color:#173b61;
+                        ">
+
+                        Password
+
+                    </label>
+
+
+                    <input
+                        type="password"
+                        id="password"
+                        placeholder="Enter password"
+                        style="
+                            width:100%;
+                            padding:12px;
+                            border:1px solid #d6dde5;
+                            border-radius:6px;
+                            box-sizing:border-box;
+                        "
+                    >
+
+                </div>
+
+
+                <!-- =========================
+                     ROLE
+                ========================== -->
+                <div style="margin-bottom:20px;">
+
+                    <label
+                        for="role"
+                        style="
+                            display:block;
+                            margin-bottom:7px;
+                            font-weight:600;
+                            color:#173b61;
+                        ">
+
+                        Role
+
+                    </label>
+
+
+                    <select
+                        id="role"
+                        required
+                        style="
+                            width:100%;
+                            padding:12px;
+                            border:1px solid #d6dde5;
+                            border-radius:6px;
+                            background:white;
+                            box-sizing:border-box;
+                        "
+                    >
+
+                        <option value="">
+                            Select Role
+                        </option>
+
+                        <option value="admin">
+                            Admin
+                        </option>
+
+                        <option value="organiser">
+                            Organiser
+                        </option>
+
+                        <option value="customer">
+                            Customer
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- =========================
+                     FORM BUTTONS
+                ========================== -->
+                <div style="
+                    display:flex;
+                    gap:10px;
+                ">
+
+                    <button
+                        type="submit"
+                        class="add-user-btn"
+                        id="saveUserBtn">
+
+                        Save User
+
+                    </button>
+
+
+                    <button
+                        type="button"
+                        onclick="closeUserForm()"
+                        style="
+                            padding:11px 20px;
+                            border:none;
+                            border-radius:6px;
+                            background:#e8edf3;
+                            color:#173b61;
+                            font-weight:600;
+                            cursor:pointer;
+                        ">
+
+                        Cancel
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </section>
+
+
+        <!-- =========================
+             USERS LIST
+        ========================== -->
+        <section class="users-section">
+
+            <h2>
+                All Users
+            </h2>
+
+
+            <div
+                id="usersGrid"
+                class="users-grid"
+            >
+
+                <p>
+                    Loading users...
+                </p>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- ==========================================
+         AUTHENTICATION / ADMIN PROTECTION
+    =========================================== -->
+
+    <script src="auth.js"></script>
+
+    <script>
+        requireRole("admin");
+    </script>
+
+
+    <!-- ==========================================
+         USER MANAGEMENT JAVASCRIPT
+    =========================================== -->
+
+    <script src="admin-users.js"></script>
+
+
+</body>
+
+</html>

@@ -1,0 +1,667 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EventHub | Organiser Dashboard</title>
+<style>
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f3f6fb;
+    color: #17233b;
+}
+
+header {
+    background: #172b50;
+    color: white;
+    padding: 22px 5%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+header h1 { margin: 0; font-size: 25px; }
+header p { margin: 6px 0 0; color: #cbd5e1; }
+
+button {
+    border: 0;
+    border-radius: 7px;
+    padding: 11px 16px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.primary { background: #2563eb; color: white; }
+.danger { background: #dc2626; color: white; }
+.secondary { background: #e2e8f0; color: #17233b; }
+header button { background: white; color: #172b50; }
+button:disabled { opacity: .5; cursor: not-allowed; }
+
+main {
+    max-width: 1250px;
+    margin: 30px auto;
+    padding: 0 20px;
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 16px;
+    margin-bottom: 25px;
+}
+
+.stat, section {
+    background: white;
+    border-radius: 12px;
+    padding: 22px;
+    box-shadow: 0 3px 12px #17233b0d;
+}
+
+.stat span { color: #64748b; font-size: 14px; }
+.stat strong { display: block; font-size: 30px; margin-top: 10px; }
+section { margin-bottom: 24px; }
+h2 { margin-top: 0; }
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.field label {
+    display: block;
+    font-weight: bold;
+    font-size: 14px;
+    margin-bottom: 7px;
+}
+
+.field input, .field select, .field textarea {
+    width: 100%;
+    border: 1px solid #cbd5e1;
+    border-radius: 7px;
+    padding: 11px;
+    font: inherit;
+}
+
+.full { grid-column: 1 / -1; }
+.actions { display: flex; gap: 10px; margin-top: 18px; }
+
+.toolbar {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+}
+
+.toolbar select {
+    padding: 10px;
+    border: 1px solid #cbd5e1;
+}
+
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; min-width: 900px; }
+
+th, td {
+    padding: 13px;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+th { background: #f8fafc; }
+td button { padding: 8px 11px; margin: 2px; }
+small { color: #64748b; }
+
+#message {
+    display: none;
+    padding: 14px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.success { background: #dcfce7; color: #166534; }
+.error { background: #fee2e2; color: #991b1b; }
+
+@media(max-width: 650px) {
+    .form-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<header>
+    <div>
+        <h1>EventHub Organiser Dashboard</h1>
+        <p id="welcome">Checking your session...</p>
+    </div>
+    <button id="logoutButton" type="button">Logout</button>
+</header>
+
+<main>
+    <div id="message" role="alert"></div>
+
+    <div class="stats">
+        <div class="stat">
+            <span>My Events</span>
+            <strong id="totalEvents">0</strong>
+        </div>
+        <div class="stat">
+            <span>Upcoming Events</span>
+            <strong id="upcomingEvents">0</strong>
+        </div>
+        <div class="stat">
+            <span>Available Tickets</span>
+            <strong id="availableTickets">0</strong>
+        </div>
+        <div class="stat">
+            <span>Booked Tickets</span>
+            <strong id="bookedTickets">0</strong>
+        </div>
+    </div>
+
+    <section>
+        <h2 id="formTitle">Create New Event</h2>
+
+        <form id="eventForm">
+            <div class="form-grid">
+                <div class="field">
+                    <label for="eventName">Event Name</label>
+                    <input id="eventName" required maxlength="255">
+                </div>
+
+                <div class="field">
+                    <label for="venueId">Venue</label>
+                    <select id="venueId" required>
+                        <option value="">Select venue</option>
+                    </select>
+                </div>
+
+                <div class="field full">
+                    <label for="description">Description</label>
+                    <textarea id="description" rows="3" required></textarea>
+                </div>
+
+                <div class="field">
+                    <label for="eventDate">Event Date</label>
+                    <input type="date" id="eventDate" required>
+                </div>
+
+                <div class="field">
+                    <label for="eventTime">Event Time</label>
+                    <input type="time" id="eventTime" required>
+                </div>
+
+                <div class="field">
+                    <label for="ticketPrice">Ticket Price (RM)</label>
+                    <input type="number" id="ticketPrice"
+                           min="0" step="0.01" required>
+                </div>
+
+                <div class="field">
+                    <label for="totalTickets">Total Tickets</label>
+                    <input type="number" id="totalTickets"
+                           min="1" step="1" required>
+                    <small id="capacityHint"></small>
+                </div>
+
+                <div class="field full">
+                    <label for="status">Event Status</label>
+                    <select id="status">
+                        <option value="upcoming">Upcoming</option>
+                        <option value="ongoing">Ongoing</option>
+                        <option value="completed">Completed</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button class="primary" id="saveButton" type="submit">
+                    Create Event
+                </button>
+                <button class="secondary" type="button"
+                        onclick="resetForm()">
+                    Clear / Cancel Edit
+                </button>
+            </div>
+        </form>
+    </section>
+
+    <section>
+        <div class="toolbar">
+            <h2>My Events</h2>
+            <select id="filterStatus" onchange="renderEvents()">
+                <option value="all">All Events</option>
+                <option value="upcoming">Upcoming</option>
+                <option value="ongoing">Ongoing</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+            </select>
+        </div>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Event</th>
+                        <th>Date / Time</th>
+                        <th>Venue</th>
+                        <th>Price</th>
+                        <th>Total</th>
+                        <th>Available</th>
+                        <th>Booked</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="eventsTable">
+                    <tr>
+                        <td colspan="10">Loading events...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+
+<script>
+const API = "../api/";
+
+let currentUser = null;
+let myEvents = [];
+let venues = [];
+let editingId = null;
+
+function showMessage(text, error = false) {
+    const el = document.getElementById("message");
+    el.textContent = text;
+    el.className = error ? "error" : "success";
+    el.style.display = "block";
+    window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+async function apiRequest(path, options = {}) {
+    const response = await fetch(API + path, {
+        credentials: "same-origin",
+        cache: "no-store",
+        ...options
+    });
+
+    let result;
+
+    try {
+        result = await response.json();
+    } catch {
+        throw new Error("Invalid server response");
+    }
+
+    if (!response.ok || result.success === false) {
+        throw new Error(result.message || "Request failed");
+    }
+
+    return result;
+}
+
+async function checkSession() {
+    const result = await apiRequest("session.php");
+
+    if (result.logged_in === false) {
+        throw new Error("Please log in first.");
+    }
+
+    const user = result.user || result.data || result;
+    const role = user.role || result.role;
+    const id = user.user_id || result.user_id;
+    const name = user.name || result.name || "Organiser";
+
+    if (!id || !["organiser", "admin"].includes(role)) {
+        throw new Error(
+            "Please log in as an organiser or administrator"
+        );
+    }
+
+    currentUser = {
+        user_id: Number(id),
+        role,
+        name
+    };
+
+    document.getElementById("welcome").textContent =
+        "Welcome, " + currentUser.name + " (" + role + ")";
+}
+
+async function loadVenues() {
+    const result = await apiRequest("venues.php");
+    venues = result.data || [];
+
+    const select = document.getElementById("venueId");
+    select.innerHTML = '<option value="">Select venue</option>';
+
+    venues.forEach(venue => {
+        const option = document.createElement("option");
+        option.value = venue.venue_id;
+        option.textContent =
+            venue.venue_name + " — " +
+            venue.location + " (Capacity: " +
+            venue.capacity + ")";
+        select.appendChild(option);
+    });
+}
+
+async function loadEvents() {
+    const result = await apiRequest("events.php");
+
+    myEvents = (result.data || []).filter(event =>
+        currentUser.role === "admin" ||
+        Number(event.organiser_id) === currentUser.user_id
+    );
+
+    renderEvents();
+}
+
+function renderEvents() {
+    const filter = document.getElementById("filterStatus").value;
+
+    const filtered = myEvents.filter(event =>
+        filter === "all" || event.status === filter
+    );
+
+    document.getElementById("totalEvents").textContent =
+        myEvents.length;
+
+    document.getElementById("upcomingEvents").textContent =
+        myEvents.filter(e => e.status === "upcoming").length;
+
+    document.getElementById("availableTickets").textContent =
+        myEvents.reduce(
+            (sum, e) => sum + Number(e.available_tickets), 0
+        );
+
+    document.getElementById("bookedTickets").textContent =
+        myEvents.reduce(
+            (sum, e) => sum +
+                (Number(e.total_tickets) -
+                 Number(e.available_tickets)), 0
+        );
+
+    const tbody = document.getElementById("eventsTable");
+    tbody.replaceChildren();
+
+    if (!filtered.length) {
+        const row = tbody.insertRow();
+        const cell = row.insertCell();
+        cell.colSpan = 10;
+        cell.textContent = "No events found.";
+        return;
+    }
+
+    filtered.forEach(event => {
+        const row = tbody.insertRow();
+
+        const values = [
+            event.event_id,
+            event.event_name,
+            event.event_date + " " + event.event_time,
+            event.venue_name,
+            "RM " + Number(event.ticket_price).toFixed(2),
+            event.total_tickets,
+            event.available_tickets,
+            Number(event.total_tickets) -
+                Number(event.available_tickets),
+            event.status
+        ];
+
+        values.forEach(value => {
+            row.insertCell().textContent = value;
+        });
+
+        const actions = row.insertCell();
+
+        const edit = document.createElement("button");
+        edit.textContent = "Edit";
+        edit.className = "primary";
+        edit.onclick = () => editEvent(Number(event.event_id));
+
+        const del = document.createElement("button");
+        del.textContent = "Delete";
+        del.className = "danger";
+        del.onclick = () => deleteEvent(Number(event.event_id));
+
+        actions.append(edit, del);
+    });
+}
+
+function editEvent(id) {
+    const event = myEvents.find(e => Number(e.event_id) === id);
+    if (!event) return;
+
+    editingId = id;
+
+    document.getElementById("eventName").value = event.event_name;
+    document.getElementById("description").value =
+        event.description || "";
+    document.getElementById("venueId").value = event.venue_id;
+    document.getElementById("eventDate").value = event.event_date;
+    document.getElementById("eventTime").value =
+        event.event_time.substring(0, 5);
+    document.getElementById("ticketPrice").value =
+        event.ticket_price;
+    document.getElementById("totalTickets").value =
+        event.total_tickets;
+    document.getElementById("status").value = event.status;
+
+    document.getElementById("formTitle").textContent =
+        "Edit Event #" + id;
+
+    document.getElementById("saveButton").textContent =
+        "Update Event";
+
+    updateCapacityHint();
+
+    document.getElementById("eventForm").scrollIntoView({
+        behavior: "smooth"
+    });
+}
+
+function resetForm() {
+    editingId = null;
+    document.getElementById("eventForm").reset();
+
+    document.getElementById("formTitle").textContent =
+        "Create New Event";
+
+    document.getElementById("saveButton").textContent =
+        "Create Event";
+
+    updateCapacityHint();
+}
+
+function updateCapacityHint() {
+    const id = Number(document.getElementById("venueId").value);
+    const venue = venues.find(v => Number(v.venue_id) === id);
+
+    document.getElementById("capacityHint").textContent =
+        venue ? "Maximum venue capacity: " + venue.capacity : "";
+}
+
+document.getElementById("venueId").addEventListener(
+    "change", updateCapacityHint
+);
+
+document.getElementById("eventForm").addEventListener(
+    "submit", async function(event) {
+        event.preventDefault();
+
+        const button = document.getElementById("saveButton");
+        button.disabled = true;
+
+        const payload = {
+            venue_id: Number(
+                document.getElementById("venueId").value
+            ),
+            event_name: document.getElementById(
+                "eventName"
+            ).value.trim(),
+            description: document.getElementById(
+                "description"
+            ).value.trim(),
+            event_date: document.getElementById(
+                "eventDate"
+            ).value,
+            event_time: document.getElementById(
+                "eventTime"
+            ).value,
+            ticket_price: Number(
+                document.getElementById("ticketPrice").value
+            ),
+            total_tickets: Number(
+                document.getElementById("totalTickets").value
+            ),
+            status: document.getElementById("status").value
+        };
+
+        const venue = venues.find(
+            v => Number(v.venue_id) === payload.venue_id
+        );
+
+        if (
+            venue &&
+            payload.total_tickets > Number(venue.capacity)
+        ) {
+            showMessage("Tickets exceed venue capacity.", true);
+            button.disabled = false;
+            return;
+        }
+
+        const wasEditing = editingId !== null;
+
+        try {
+            const path = wasEditing
+                ? "events.php?id=" + editingId
+                : "events.php";
+
+            await apiRequest(path, {
+                method: wasEditing ? "PUT" : "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-Requested-With": "XMLHttpRequest"
+                },
+                body: JSON.stringify(payload)
+            });
+
+            resetForm();
+            await loadEvents();
+
+            showMessage(
+                wasEditing
+                    ? "Event updated successfully."
+                    : "Event created successfully."
+            );
+
+        } catch (error) {
+            showMessage(error.message, true);
+        } finally {
+            button.disabled = false;
+        }
+    }
+);
+
+async function deleteEvent(id) {
+    const event = myEvents.find(e => Number(e.event_id) === id);
+    if (!event) return;
+
+    if (!confirm("Delete event: " + event.event_name + "?")) {
+        return;
+    }
+
+    try {
+        await apiRequest("events.php?id=" + id, {
+            method: "DELETE",
+            headers: {
+                "X-Requested-With": "XMLHttpRequest"
+            }
+        });
+
+        await loadEvents();
+        showMessage("Event deleted successfully.");
+
+    } catch (error) {
+        showMessage(error.message, true);
+    }
+}
+
+// ========================================
+// FIXED LOGOUT
+// ========================================
+
+async function logout() {
+    const button = document.getElementById("logoutButton");
+
+    button.disabled = true;
+    button.textContent = "Logging out...";
+
+    try {
+        const result = await apiRequest("logout.php", {
+            method: "POST",
+            headers: {
+                "X-Requested-With": "XMLHttpRequest"
+            }
+        });
+
+        if (!result.success) {
+            throw new Error(
+                result.message || "Logout failed."
+            );
+        }
+
+        // Redirect only after the server confirms logout.
+        window.location.replace("index.html");
+
+    } catch (error) {
+        showMessage(
+            "Unable to log out: " + error.message,
+            true
+        );
+
+        button.disabled = false;
+        button.textContent = "Logout";
+    }
+}
+
+document.getElementById("logoutButton").addEventListener(
+    "click",
+    logout
+);
+
+// ========================================
+// INITIALIZE
+// ========================================
+
+async function initialise() {
+    try {
+        await checkSession();
+        await loadVenues();
+        await loadEvents();
+
+    } catch (error) {
+        showMessage(error.message, true);
+
+        document.getElementById("welcome").textContent =
+            "Access unavailable";
+
+        document.getElementById("saveButton").disabled = true;
+    }
+}
+
+initialise();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,329 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | EventHub</title>
+    <link rel="stylesheet" href="style.css?v=3">
+
+    <style>
+        [hidden] { display: none !important; }
+
+        .login-page {
+            min-height: calc(100vh - 145px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 90px 20px;
+            background:
+                radial-gradient(ellipse at 50% 45%,
+                    rgba(220, 38, 38, 0.17), transparent 65%),
+                #09090b;
+        }
+
+        .login-panel {
+            width: 100%;
+            max-width: 460px;
+            padding: 45px 35px;
+            border: 1px solid #38383f;
+            border-radius: 20px;
+            background: #18181d;
+            box-shadow: 0 25px 70px rgba(0,0,0,0.3);
+        }
+
+        .login-panel .label {
+            color: #ef4444;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+
+        .login-panel h1 {
+            color: #fff;
+            font-size: 35px;
+            letter-spacing: -1px;
+            margin-bottom: 12px;
+        }
+
+        .login-panel > p {
+            color: #a1a1aa;
+            margin-bottom: 28px;
+            line-height: 1.7;
+        }
+
+        #loginForm {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        #loginForm label {
+            color: #e4e4e7;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        #loginForm input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px solid #3f3f46;
+            border-radius: 10px;
+            background: #101014;
+            color: #fff;
+            font: inherit;
+        }
+
+        #loginForm input:focus {
+            outline: none;
+            border-color: #ef4444;
+        }
+
+        #loginForm button {
+            margin-top: 8px;
+            width: 100%;
+        }
+
+        .account-status {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <a href="index.html" class="logo">EventHub</a>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="events.html">Events</a>
+            <a href="my-bookings.html">My Bookings</a>
+            <a href="login.html" id="loginNav">Login</a>
+            <button type="button" id="logoutButton"
+                    class="btn btn-primary" hidden>Logout</button>
+        </div>
+    </nav>
+
+    <main class="login-page">
+        <div class="login-panel">
+            <p class="label">Welcome to EventHub</p>
+            <h1 id="loginHeading">Welcome Back.</h1>
+            <p id="loginDescription">
+                Log in to book exciting events and manage your tickets.
+            </p>
+
+            <form id="loginForm">
+                <label for="email">Email Address</label>
+                <input type="email" id="email"
+                       placeholder="Enter your email"
+                       autocomplete="email" required>
+
+                <label for="password">Password</label>
+                <input type="password" id="password"
+                       placeholder="Enter your password"
+                       autocomplete="current-password" required>
+
+                <button type="submit" class="btn btn-primary">
+                    Login to EventHub
+                </button>
+            </form>
+
+            <p id="loginMessage" class="feedback account-status"
+               role="status"></p>
+
+            <a href="events.html" class="btn btn-secondary"
+               id="browseButton" hidden>
+                Browse Events
+            </a>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 EventHub. All rights reserved.</p>
+    </footer>
+
+    <script>
+        const apiBase = "../api/";
+
+        const loginForm = document.getElementById("loginForm");
+        const loginMessage = document.getElementById("loginMessage");
+        const loginNav = document.getElementById("loginNav");
+        const logoutButton = document.getElementById("logoutButton");
+        const browseButton = document.getElementById("browseButton");
+
+        let loggedIn = false;
+        let currentUser = null;
+
+        function setMessage(message, error = false) {
+            loginMessage.textContent = message;
+            loginMessage.classList.toggle("error", error);
+            loginMessage.classList.toggle(
+                "success", !error && Boolean(message)
+            );
+        }
+
+        async function getJson(url, options = {}) {
+            const response = await fetch(url, {
+                credentials: "same-origin",
+                cache: "no-store",
+                ...options
+            });
+
+            const result = await response.json();
+            return { response, result };
+        }
+
+        function dashboardForRole(role) {
+            if (role === "admin") return "admin.html";
+            if (role === "organiser") return "organiser.html";
+            return null;
+        }
+
+        function updateAuthUI() {
+            loginNav.hidden = loggedIn;
+            logoutButton.hidden = !loggedIn;
+            loginForm.hidden = loggedIn;
+            browseButton.hidden = !loggedIn ||
+                currentUser?.role !== "customer";
+
+            document.getElementById("loginHeading").textContent =
+                loggedIn ? "My Account" : "Welcome Back.";
+
+            document.getElementById("loginDescription").textContent =
+                loggedIn
+                    ? "You are currently logged in to EventHub."
+                    : "Log in to book exciting events and manage your tickets.";
+
+            if (loggedIn && currentUser) {
+                setMessage(
+                    "Welcome, " + (currentUser.name || "User") + "!"
+                );
+            }
+        }
+
+        async function checkSession() {
+            try {
+                const { response, result } = await getJson(
+                    apiBase + "session.php"
+                );
+
+                loggedIn = Boolean(
+                    response.ok && result.success && result.logged_in
+                );
+
+                currentUser = loggedIn ? result.data : null;
+                updateAuthUI();
+
+            } catch (error) {
+                loggedIn = false;
+                currentUser = null;
+                updateAuthUI();
+                setMessage("Unable to check login status.", true);
+                console.error("Session error:", error);
+            }
+        }
+
+        loginForm.addEventListener("submit", async function(event) {
+            event.preventDefault();
+
+            const button = this.querySelector('button[type="submit"]');
+            button.disabled = true;
+            button.textContent = "Logging in...";
+            setMessage("Logging in...");
+
+            try {
+                const { response, result } = await getJson(
+                    apiBase + "login.php",
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                            email: document.getElementById("email")
+                                .value.trim(),
+                            password: document.getElementById("password")
+                                .value
+                        })
+                    }
+                );
+
+                if (!response.ok || !result.success) {
+                    throw new Error(result.message || "Login failed.");
+                }
+
+                loggedIn = true;
+                currentUser = result.data;
+                document.getElementById("password").value = "";
+
+                const dashboard = dashboardForRole(currentUser.role);
+
+                if (dashboard) {
+                    window.location.assign(dashboard);
+                    return;
+                }
+
+                if (currentUser.role !== "customer") {
+                    throw new Error("Unsupported account role.");
+                }
+
+                const params = new URLSearchParams(
+                    window.location.search
+                );
+                const next = params.get("next");
+
+                const allowedDestinations = [
+                    "events.html",
+                    "my-bookings.html"
+                ];
+
+                const destination =
+                    allowedDestinations.includes(next)
+                        ? next
+                        : "my-bookings.html";
+
+                window.location.assign(destination);
+
+            } catch (error) {
+                setMessage(error.message || "Login failed.", true);
+            } finally {
+                button.disabled = false;
+                button.textContent = "Login to EventHub";
+            }
+        });
+
+        async function logout() {
+            logoutButton.disabled = true;
+            logoutButton.textContent = "Logging out...";
+
+            try {
+                const { response, result } = await getJson(
+                    apiBase + "logout.php",
+                    {
+                        method: "POST",
+                        headers: {
+                            "X-Requested-With": "XMLHttpRequest"
+                        }
+                    }
+                );
+
+                if (!response.ok || !result.success) {
+                    throw new Error(result.message || "Logout failed.");
+                }
+
+                window.location.assign("index.html");
+
+            } catch (error) {
+                setMessage(error.message || "Unable to log out.", true);
+            } finally {
+                logoutButton.disabled = false;
+                logoutButton.textContent = "Logout";
+            }
+        }
+
+        logoutButton.addEventListener("click", logout);
+        document.addEventListener("DOMContentLoaded", checkSession);
+    </script>
+</body>
+</html>

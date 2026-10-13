@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Events - Event Booking System</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- =========================
+         NAVBAR
+    ========================== -->
+    <nav class="navbar">
+
+        <div class="nav-container">
+
+            <h2>
+                Event Booking System
+            </h2>
+
+            <div class="nav-links">
+
+                <a href="events.html">
+                    Events
+                </a>
+
+                <a href="my-bookings.html">
+                    My Bookings
+                </a>
+
+                <button
+                    class="logout-btn"
+                    onclick="logout()">
+                    Logout
+                </button>
+
+            </div>
+
+        </div>
+
+    </nav>
+
+
+    <!-- =========================
+         MAIN CONTENT
+    ========================== -->
+    <main class="main-container">
+
+
+        <!-- PAGE HEADER -->
+        <div class="page-header">
+
+            <div>
+
+                <h1>
+                    Available Events
+                </h1>
+
+                <p>
+                    Browse and book upcoming events.
+                </p>
+
+            </div>
+
+
+            <!-- USER INFORMATION -->
+            <div id="userInfo"></div>
+
+        </div>
+
+
+        <!-- =========================
+             LOADING
+        ========================== -->
+        <div id="loading">
+
+            Loading events...
+
+        </div>
+
+
+        <!-- =========================
+             MESSAGE
+        ========================== -->
+        <div
+            id="eventMessage"
+            class="error-message">
+        </div>
+
+
+        <!-- =========================
+             EVENTS LIST
+        ========================== -->
+        <div
+            id="eventsContainer"
+            class="events-grid">
+        </div>
+
+
+    </main>
+
+
+    <!-- ==========================================
+         AUTHENTICATION / CUSTOMER PROTECTION
+    =========================================== -->
+
+    <script src="auth.js"></script>
+
+    <script>
+        requireRole("customer");
+    </script>
+
+
+    <!-- ==========================================
+         EVENTS JAVASCRIPT
+    =========================================== -->
+
+    <script src="events.js"></script>
+
+
+</body>
+
+</html>

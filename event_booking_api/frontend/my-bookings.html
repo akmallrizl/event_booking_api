@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>My Bookings - Event Booking System</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- =========================
+         NAVBAR
+    ========================== -->
+    <nav class="navbar">
+
+        <div class="nav-container">
+
+            <h2>
+                Event Booking System
+            </h2>
+
+            <div class="nav-links">
+
+                <a href="events.html">
+                    Events
+                </a>
+
+                <a href="my-bookings.html">
+                    My Bookings
+                </a>
+
+                <button
+                    class="logout-btn"
+                    onclick="logout()">
+                    Logout
+                </button>
+
+            </div>
+
+        </div>
+
+    </nav>
+
+
+    <!-- =========================
+         MAIN CONTENT
+    ========================== -->
+    <main class="main-container">
+
+
+        <!-- PAGE HEADER -->
+        <div class="page-header">
+
+            <div>
+
+                <h1>
+                    My Bookings
+                </h1>
+
+                <p>
+                    View your event booking history.
+                </p>
+
+            </div>
+
+
+            <!-- USER INFORMATION -->
+            <div id="userInfo"></div>
+
+        </div>
+
+
+        <!-- =========================
+             LOADING
+        ========================== -->
+        <div id="bookingLoading">
+
+            Loading your bookings...
+
+        </div>
+
+
+        <!-- =========================
+             MESSAGE
+        ========================== -->
+        <div id="myBookingMessage"></div>
+
+
+        <!-- =========================
+             MY BOOKINGS LIST
+        ========================== -->
+        <div
+            id="myBookingsContainer"
+            class="my-bookings-grid">
+        </div>
+
+
+    </main>
+
+
+    <!-- ==========================================
+         AUTHENTICATION / CUSTOMER PROTECTION
+    =========================================== -->
+
+    <script src="auth.js"></script>
+
+    <script>
+        requireRole("customer");
+    </script>
+
+
+    <!-- ==========================================
+         MY BOOKINGS JAVASCRIPT
+    =========================================== -->
+
+    <script src="my-bookings.js"></script>
+
+
+</body>
+
+</html>

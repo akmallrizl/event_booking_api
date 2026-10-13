@@ -1,0 +1,429 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My QR Ticket | EventHub</title>
+    <link rel="stylesheet" href="style.css?v=3">
+
+    <style>
+        body {
+            background: #09090b;
+            color: #ffffff;
+        }
+
+        .ticket-page {
+            min-height: 80vh;
+            padding: 90px 20px 60px;
+            display: flex;
+            align-items: center;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .ticket-heading {
+            text-align: center;
+        }
+
+        .ticket-heading h1 {
+            font-size: clamp(32px, 5vw, 48px);
+            color: #ffffff;
+        }
+
+        .ticket-heading h1 span {
+            color: #ef4444;
+        }
+
+        .ticket-heading p {
+            margin-top: 10px;
+            color: #bcbcc6;
+        }
+
+        .ticket-card {
+            width: 100%;
+            max-width: 440px;
+            background: #1b1b20;
+            border: 1px solid #383840;
+            border-radius: 22px;
+            overflow: hidden;
+        }
+
+        .ticket-top {
+            background: linear-gradient(135deg, #991b1b, #dc2626);
+            padding: 26px;
+            text-align: center;
+        }
+
+        .ticket-brand {
+            font-size: 28px;
+            font-weight: 900;
+            letter-spacing: -1px;
+        }
+
+        .ticket-top p {
+            margin-top: 6px;
+            font-size: 12px;
+            letter-spacing: 2px;
+            color: #ffe5e5;
+        }
+
+        .ticket-body {
+            padding: 26px;
+        }
+
+        .ticket-event {
+            font-size: 23px;
+            line-height: 1.3;
+            margin-bottom: 22px;
+        }
+
+        .ticket-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+        }
+
+        .ticket-detail small {
+            display: block;
+            color: #a1a1aa;
+            margin-bottom: 5px;
+        }
+
+        .ticket-detail strong {
+            color: #ffffff;
+            overflow-wrap: anywhere;
+        }
+
+        .ticket-divider {
+            border-top: 2px dashed #55555d;
+            margin: 25px 0;
+        }
+
+        .qr-area {
+            text-align: center;
+        }
+
+        #qrCode {
+            background: #ffffff;
+            padding: 16px;
+            border-radius: 14px;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            min-width: 220px;
+            min-height: 220px;
+        }
+
+        #qrCode canvas,
+        #qrCode img {
+            max-width: 100%;
+        }
+
+        .qr-caption {
+            color: #a1a1aa;
+            margin-top: 14px;
+            font-size: 13px;
+        }
+
+        .ticket-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .ticket-button {
+            border: 0;
+            border-radius: 9px;
+            padding: 13px 20px;
+            background: #dc2626;
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .ticket-button.secondary {
+            background: #29292f;
+            border: 1px solid #45454f;
+        }
+
+        .ticket-button:hover {
+            filter: brightness(1.12);
+        }
+
+        #ticketMessage {
+            text-align: center;
+            color: #d4d4d8;
+        }
+
+        #ticketMessage.error {
+            color: #f87171;
+        }
+
+        [hidden] {
+            display: none !important;
+        }
+
+        @media print {
+            body {
+                background: white;
+            }
+
+            .navbar,
+            .ticket-heading,
+            .ticket-actions,
+            footer,
+            #ticketMessage {
+                display: none !important;
+            }
+
+            .ticket-page {
+                padding: 0;
+                min-height: auto;
+            }
+
+            .ticket-card {
+                border: 1px solid #aaaaaa;
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <a href="index.html" class="logo">EventHub</a>
+
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="events.html">Events</a>
+            <a href="my-bookings.html">My Bookings</a>
+        </div>
+    </nav>
+
+    <main class="ticket-page">
+        <div class="ticket-heading">
+            <h1>Your <span>QR Ticket</span></h1>
+            <p>Present this ticket at the event entrance.</p>
+        </div>
+
+        <p id="ticketMessage" role="status">
+            Loading your ticket...
+        </p>
+
+        <article class="ticket-card" id="ticketCard" hidden>
+            <div class="ticket-top">
+                <div class="ticket-brand">EVENTHUB</div>
+                <p>OFFICIAL EVENT E-TICKET</p>
+            </div>
+
+            <div class="ticket-body">
+                <h2 class="ticket-event" id="eventName"></h2>
+
+                <div class="ticket-details">
+                    <div class="ticket-detail">
+                        <small>Booking ID</small>
+                        <strong id="bookingId"></strong>
+                    </div>
+
+                    <div class="ticket-detail">
+                        <small>Customer</small>
+                        <strong id="customerName"></strong>
+                    </div>
+
+                    <div class="ticket-detail">
+                        <small>Event Date</small>
+                        <strong id="eventDate"></strong>
+                    </div>
+
+                    <div class="ticket-detail">
+                        <small>Event Time</small>
+                        <strong id="eventTime"></strong>
+                    </div>
+
+                    <div class="ticket-detail">
+                        <small>Quantity</small>
+                        <strong id="ticketQuantity"></strong>
+                    </div>
+
+                    <div class="ticket-detail">
+                        <small>Total</small>
+                        <strong id="ticketTotal"></strong>
+                    </div>
+                </div>
+
+                <div class="ticket-divider"></div>
+
+                <div class="qr-area">
+                    <div id="qrCode"></div>
+                    <p class="qr-caption">
+                        Scan at the entrance for verification.
+                    </p>
+                </div>
+            </div>
+        </article>
+
+        <div class="ticket-actions">
+            <button
+                type="button"
+                id="downloadTicket"
+                class="ticket-button"
+                hidden
+            >
+                Save / Print Ticket
+            </button>
+
+            <a
+                href="my-bookings.html"
+                class="ticket-button secondary"
+            >
+                Back to My Bookings
+            </a>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 EventHub. All rights reserved.</p>
+    </footer>
+
+    <!-- QRCode.js library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <script>
+        const apiBase = "../api/";
+        const ticketMessage = document.getElementById("ticketMessage");
+        const ticketCard = document.getElementById("ticketCard");
+        const downloadButton = document.getElementById("downloadTicket");
+
+        function setMessage(message, error = false) {
+            ticketMessage.textContent = message;
+            ticketMessage.classList.toggle("error", error);
+        }
+
+        function formatMoney(value) {
+            return "RM " + Number(value || 0).toFixed(2);
+        }
+
+        function setText(id, value) {
+            document.getElementById(id).textContent =
+                String(value ?? "N/A");
+        }
+
+        async function loadTicket() {
+            const params = new URLSearchParams(window.location.search);
+            const bookingId = params.get("id");
+
+            if (!bookingId || !/^[1-9]\d*$/.test(bookingId)) {
+                setMessage("Invalid booking ID.", true);
+                return;
+            }
+
+            try {
+                const sessionResponse = await fetch(
+                    apiBase + "session.php",
+                    {
+                        credentials: "same-origin",
+                        cache: "no-store"
+                    }
+                );
+
+                const session = await sessionResponse.json();
+
+                if (
+                    !sessionResponse.ok ||
+                    !session.success ||
+                    !session.logged_in ||
+                    session.data?.role !== "customer"
+                ) {
+                    setMessage(
+                        "Please log in as a customer to view your ticket.",
+                        true
+                    );
+                    return;
+                }
+
+                const response = await fetch(
+                    apiBase + "bookings.php?id=" +
+                    encodeURIComponent(bookingId),
+                    {
+                        credentials: "same-origin",
+                        cache: "no-store"
+                    }
+                );
+
+                const result = await response.json();
+
+                if (!response.ok || !result.success || !result.data) {
+                    throw new Error(
+                        result.message || "Unable to load ticket."
+                    );
+                }
+
+                const booking = result.data;
+
+                if (
+                    booking.booking_status !== "confirmed" ||
+                    !booking.ticket_token
+                ) {
+                    setMessage(
+                        "QR ticket is unavailable for this booking.",
+                        true
+                    );
+                    return;
+                }
+
+                setText("eventName", booking.event_name);
+                setText("bookingId", "#" + booking.booking_id);
+                setText("customerName", booking.customer_name);
+                setText("eventDate", booking.event_date);
+                setText("eventTime", booking.event_time);
+                setText(
+                    "ticketQuantity",
+                    booking.quantity + " ticket(s)"
+                );
+                setText(
+                    "ticketTotal",
+                    formatMoney(booking.total_amount)
+                );
+
+                if (typeof QRCode === "undefined") {
+                    throw new Error(
+                        "QR library failed to load. Check your internet connection."
+                    );
+                }
+
+                const qrContainer = document.getElementById("qrCode");
+                qrContainer.replaceChildren();
+
+                new QRCode(qrContainer, {
+                    text: booking.ticket_token,
+                    width: 200,
+                    height: 200,
+                    colorDark: "#111111",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.M
+                });
+
+                ticketCard.hidden = false;
+                downloadButton.hidden = false;
+                setMessage("");
+
+            } catch (error) {
+                ticketCard.hidden = true;
+                downloadButton.hidden = true;
+                setMessage(error.message || "Ticket loading failed.", true);
+                console.error("Ticket error:", error);
+            }
+        }
+
+        downloadButton.addEventListener("click", () => {
+            window.print();
+        });
+
+        document.addEventListener("DOMContentLoaded", loadTicket);
+    </script>
+</body>
+</html>

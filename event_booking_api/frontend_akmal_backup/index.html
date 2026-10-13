@@ -1,0 +1,1032 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EventHub | Event Booking System</title>
+<link rel="stylesheet" href="style.css?v=2">
+    <style>
+        /* Ensure hidden navigation items stay hidden */
+        [hidden] {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- NAVIGATION -->
+    <nav class="navbar">
+        <a href="#home" class="logo">EventHub</a>
+
+        <div class="nav-links">
+            <a href="#home">Home</a>
+            <a href="#events">Events</a>
+            <a href="#my-bookings">My Bookings</a>
+
+            <a href="#login" id="loginNav">Login</a>
+
+            <button
+                type="button"
+                id="logoutButton"
+                class="btn btn-primary"
+                hidden
+            >
+                Logout
+            </button>
+        </div>
+    </nav>
+
+    <main>
+
+        <!-- HOME -->
+        <section class="hero" id="home">
+            <h1>Experience More with EventHub</h1>
+            <p>
+                Discover amazing events, explore venues,
+                and book your tickets effortlessly.
+                Your next unforgettable experience starts here.
+            </p>
+
+            <div class="buttons">
+                <a href="#events" class="btn btn-primary">
+                    Browse Events
+                </a>
+
+                <a href="#login"
+                   id="getStartedButton"
+                   class="btn btn-secondary">
+                    Get Started
+                </a>
+            </div>
+        </section>
+
+        <!-- EVENTS -->
+        <section id="events" class="events-section">
+            <h2>Upcoming Events</h2>
+            <p>Discover and explore our latest events.</p>
+
+            <div id="eventsContainer" class="events-grid">
+                <p>Loading events...</p>
+            </div>
+        </section>
+
+        <!-- MY BOOKINGS -->
+        <section id="my-bookings" class="bookings-section">
+            <h2>My Bookings</h2>
+            <p>Manage your event tickets and bookings.</p>
+
+            <button
+                type="button"
+                id="refreshBookings"
+                class="btn btn-primary">
+                Refresh My Bookings
+            </button>
+
+            <p id="bookingsMessage"
+               class="feedback"
+               role="status">
+                Checking login status...
+            </p>
+
+            <div id="bookingsContainer" class="bookings-grid"></div>
+        </section>
+
+        <!-- LOGIN -->
+        <section id="login" class="login-section">
+            <div class="login-container">
+                <h2 id="loginHeading">Login to EventHub</h2>
+
+                <p id="loginDescription">
+                    Welcome back! Please log in to continue.
+                </p>
+
+                <form id="loginForm">
+                    <input
+                        type="email"
+                        id="email"
+                        placeholder="Email Address"
+                        autocomplete="email"
+                        required
+                    >
+
+                    <input
+                        type="password"
+                        id="password"
+                        placeholder="Password"
+                        autocomplete="current-password"
+                        required
+                    >
+
+                    <button type="submit" class="btn btn-primary">
+                        Login
+                    </button>
+                </form>
+
+                <p id="loginMessage"
+                   class="feedback"
+                   role="status"></p>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer>
+        <p>&copy; 2026 EventHub. All rights reserved.</p>
+    </footer>
+
+    <!-- BOOKING POPUP -->
+    <dialog id="bookingDialog" aria-labelledby="bookingTitle">
+        <form id="bookingForm" class="booking-form">
+
+            <div class="dialog-heading">
+                <h2 id="bookingTitle">Book Tickets</h2>
+
+                <button
+                    type="button"
+                    id="closeBooking"
+                    class="close-btn"
+                    aria-label="Close booking form">
+                    &times;
+                </button>
+            </div>
+
+            <p id="bookingEventName" class="booking-event-name"></p>
+
+            <p>
+                Ticket price:
+                <strong id="bookingUnitPrice"></strong>
+            </p>
+
+            <p>
+                Available tickets:
+                <strong id="bookingAvailable"></strong>
+            </p>
+
+            <label for="bookingQuantity">Number of tickets</label>
+
+            <input
+                type="number"
+                id="bookingQuantity"
+                min="1"
+                step="1"
+                value="1"
+                required
+            >
+
+            <p class="booking-total">
+                Total: <strong id="bookingTotal"></strong>
+            </p>
+
+            <p id="bookingMessage"
+               class="feedback"
+               role="status"></p>
+
+            <button
+                type="submit"
+                id="confirmBooking"
+                class="btn btn-primary">
+                Confirm Booking
+            </button>
+
+        </form>
+    </dialog>
+
+<script>
+const apiBase = "../api/";
+
+const eventsContainer =
+    document.getElementById("eventsContainer");
+
+const bookingsContainer =
+    document.getElementById("bookingsContainer");
+
+const bookingsMessage =
+    document.getElementById("bookingsMessage");
+
+const bookingDialog =
+    document.getElementById("bookingDialog");
+
+const bookingForm =
+    document.getElementById("bookingForm");
+
+const bookingQuantity =
+    document.getElementById("bookingQuantity");
+
+const bookingMessage =
+    document.getElementById("bookingMessage");
+
+const loginNav =
+    document.getElementById("loginNav");
+
+const logoutButton =
+    document.getElementById("logoutButton");
+
+const loginForm =
+    document.getElementById("loginForm");
+
+const loginMessage =
+    document.getElementById("loginMessage");
+
+const getStartedButton =
+    document.getElementById("getStartedButton");
+
+let selectedEvent = null;
+let loggedIn = false;
+let currentUser = null;
+
+// ========================================
+// HELPER FUNCTIONS
+// ========================================
+
+function setMessage(element, message, error = false) {
+    element.textContent = message;
+    element.classList.toggle("error", error);
+
+    element.classList.toggle(
+        "success",
+        !error && Boolean(message)
+    );
+}
+
+function money(value) {
+    return "RM " + Number(value || 0).toLocaleString(
+        "en-MY",
+        {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }
+    );
+}
+
+function detail(label, value) {
+    const p = document.createElement("p");
+    const strong = document.createElement("strong");
+
+    strong.textContent = label + ": ";
+
+    p.append(
+        strong,
+        document.createTextNode(String(value ?? "N/A"))
+    );
+
+    return p;
+}
+
+async function getJson(url, options = {}) {
+    const response = await fetch(url, {
+        credentials: "same-origin",
+        cache: "no-store",
+        ...options
+    });
+
+    const result = await response.json();
+
+    return { response, result };
+}
+
+// ========================================
+// ROLE-BASED REDIRECTION
+// ========================================
+
+function dashboardForRole(role) {
+    if (role === "admin") {
+        return "admin.html";
+    }
+
+    if (role === "organiser") {
+        return "organiser.html";
+    }
+
+    return null;
+}
+
+function redirectAfterLogin() {
+    if (!currentUser) return false;
+
+    const destination = dashboardForRole(currentUser.role);
+
+    if (destination) {
+        window.location.assign(destination);
+        return true;
+    }
+
+    return false;
+}
+
+// ========================================
+// LOGIN / LOGOUT DISPLAY
+// ========================================
+
+function updateAuthUI() {
+    loginNav.hidden = loggedIn;
+    logoutButton.hidden = !loggedIn;
+
+    getStartedButton.hidden = loggedIn;
+    loginForm.hidden = loggedIn;
+
+    document.getElementById("loginHeading").textContent =
+        loggedIn ? "My Account" : "Login to EventHub";
+
+    document.getElementById("loginDescription").textContent =
+        loggedIn
+            ? "You are currently logged in to EventHub."
+            : "Welcome back! Please log in to continue.";
+
+    if (loggedIn && currentUser) {
+        setMessage(
+            loginMessage,
+            "Welcome, " + (currentUser.name || "User") + "!"
+        );
+    }
+}
+
+function clearLoginState() {
+    loggedIn = false;
+    currentUser = null;
+    selectedEvent = null;
+
+    loginForm.reset();
+    bookingsContainer.replaceChildren();
+
+    if (bookingDialog.open) {
+        bookingDialog.close();
+    }
+
+    setMessage(
+        bookingsMessage,
+        "Please log in to view your bookings."
+    );
+
+    updateAuthUI();
+}
+
+// ========================================
+// CHECK SESSION
+// DO NOT AUTO-REDIRECT ON HOMEPAGE LOAD
+// ========================================
+
+async function checkSession() {
+    try {
+        const { response, result } = await getJson(
+            apiBase + "session.php"
+        );
+
+        if (
+            response.ok &&
+            result.success &&
+            result.logged_in
+        ) {
+            loggedIn = true;
+            currentUser = result.data;
+
+            updateAuthUI();
+
+            // IMPORTANT:
+            // The homepage always remains visible.
+            // No automatic dashboard redirect here.
+
+            if (currentUser?.role === "customer") {
+                await loadBookings();
+            } else {
+                bookingsContainer.replaceChildren();
+
+                setMessage(
+                    bookingsMessage,
+                    "My Bookings is available for customer accounts."
+                );
+            }
+
+        } else {
+            clearLoginState();
+            setMessage(loginMessage, "");
+        }
+
+    } catch (error) {
+        setMessage(
+            bookingsMessage,
+            "Unable to check login status. Please refresh.",
+            true
+        );
+
+        console.error("Session error:", error);
+    }
+}
+
+// ========================================
+// LOGOUT
+// ========================================
+
+async function logout() {
+    logoutButton.disabled = true;
+    logoutButton.textContent = "Logging out...";
+
+    try {
+        const { response, result } = await getJson(
+            apiBase + "logout.php",
+            {
+                method: "POST",
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest"
+                }
+            }
+        );
+
+        if (!response.ok || !result.success) {
+            throw new Error(
+                result.message || "Logout failed."
+            );
+        }
+
+        clearLoginState();
+
+        setMessage(
+            loginMessage,
+            "You have logged out successfully."
+        );
+
+        window.location.hash = "#home";
+
+    } catch (error) {
+        setMessage(
+            loginMessage,
+            error.message || "Unable to log out.",
+            true
+        );
+
+    } finally {
+        logoutButton.disabled = false;
+        logoutButton.textContent = "Logout";
+    }
+}
+
+logoutButton.addEventListener("click", logout);
+
+// ========================================
+// BOOKING PRICE CALCULATION
+// ========================================
+
+function updateTotal() {
+    if (!selectedEvent) return;
+
+    const quantity = Number(bookingQuantity.value);
+
+    document.getElementById("bookingTotal").textContent =
+        money(
+            Math.max(0, quantity) *
+            Number(selectedEvent.ticket_price)
+        );
+}
+
+// ========================================
+// OPEN BOOKING POPUP
+// ========================================
+
+function openBooking(eventData) {
+    if (!loggedIn) {
+        setMessage(
+            loginMessage,
+            "Please log in before booking tickets.",
+            true
+        );
+
+        window.location.hash = "#login";
+        return;
+    }
+
+    if (currentUser?.role !== "customer") {
+        setMessage(
+            loginMessage,
+            "Only customers can book tickets.",
+            true
+        );
+
+        window.location.hash = "#login";
+        return;
+    }
+
+    selectedEvent = eventData;
+
+    const available =
+        Number(eventData.available_tickets);
+
+    document.getElementById("bookingEventName").textContent =
+        eventData.event_name;
+
+    document.getElementById("bookingUnitPrice").textContent =
+        money(eventData.ticket_price);
+
+    document.getElementById("bookingAvailable").textContent =
+        String(available);
+
+    bookingQuantity.max = String(available);
+    bookingQuantity.value = "1";
+
+    setMessage(bookingMessage, "");
+
+    updateTotal();
+    bookingDialog.showModal();
+}
+
+// ========================================
+// LOAD EVENTS
+// ========================================
+
+async function loadEvents() {
+    try {
+        const { response, result } = await getJson(
+            apiBase + "events.php"
+        );
+
+        if (
+            !response.ok ||
+            !result.success ||
+            !Array.isArray(result.data)
+        ) {
+            throw new Error("Unable to load events");
+        }
+
+        eventsContainer.replaceChildren();
+
+        if (result.data.length === 0) {
+            eventsContainer.textContent =
+                "No events available.";
+
+            return;
+        }
+
+        result.data.forEach(item => {
+            const card =
+                document.createElement("article");
+
+            card.className = "event-card";
+
+            const title =
+                document.createElement("h3");
+
+            title.textContent = item.event_name;
+
+            const description =
+                document.createElement("p");
+
+            description.textContent =
+                item.description || "";
+
+            card.append(
+                title,
+                description,
+                detail("Date", item.event_date),
+                detail("Time", item.event_time),
+                detail("Venue", item.venue_name),
+                detail("Location", item.location),
+                detail(
+                    "Ticket Price",
+                    money(item.ticket_price)
+                ),
+                detail(
+                    "Available Tickets",
+                    item.available_tickets
+                )
+            );
+
+            const button =
+                document.createElement("button");
+
+            button.type = "button";
+            button.className = "btn btn-primary";
+
+            const available =
+                Number(item.available_tickets);
+
+            const bookable =
+                item.status === "upcoming" &&
+                available > 0;
+
+            button.textContent =
+                bookable ? "Book Now" : "Unavailable";
+
+            button.disabled = !bookable;
+
+            button.addEventListener(
+                "click",
+                () => openBooking(item)
+            );
+
+            card.appendChild(button);
+            eventsContainer.appendChild(card);
+        });
+
+    } catch (error) {
+        eventsContainer.textContent =
+            "Unable to load events. Please try again.";
+
+        console.error("Events error:", error);
+    }
+}
+
+// ========================================
+// LOAD MY BOOKINGS
+// ========================================
+
+async function loadBookings() {
+    if (!loggedIn || currentUser?.role !== "customer") {
+        bookingsContainer.replaceChildren();
+
+        setMessage(
+            bookingsMessage,
+            "Please log in as a customer to view bookings."
+        );
+
+        return;
+    }
+
+    try {
+        const { response, result } = await getJson(
+            apiBase + "bookings.php"
+        );
+
+        bookingsContainer.replaceChildren();
+
+        if (response.status === 401) {
+            clearLoginState();
+            return;
+        }
+
+        if (
+            !response.ok ||
+            !result.success ||
+            !Array.isArray(result.data)
+        ) {
+            throw new Error(
+                result.message || "Unable to load bookings"
+            );
+        }
+
+        setMessage(
+            bookingsMessage,
+            result.data.length
+                ? ""
+                : "You have no bookings yet."
+        );
+
+        result.data.forEach(item => {
+            const card =
+                document.createElement("article");
+
+            card.className = "booking-card";
+
+            const title =
+                document.createElement("h3");
+
+            title.textContent = item.event_name;
+
+            card.append(
+                title,
+                detail("Booking ID", item.booking_id),
+                detail("Date", item.event_date),
+                detail("Quantity", item.quantity),
+                detail("Total", money(item.total_amount)),
+                detail("Status", item.booking_status)
+            );
+
+            if (item.booking_status !== "cancelled") {
+                const cancelButton =
+                    document.createElement("button");
+
+                cancelButton.type = "button";
+                cancelButton.className = "btn btn-primary";
+                cancelButton.textContent = "Cancel Booking";
+
+                cancelButton.style.background = "#991b2b";
+                cancelButton.style.marginTop = "15px";
+
+                cancelButton.addEventListener(
+                    "click",
+                    () => cancelBooking(item, cancelButton)
+                );
+
+                card.appendChild(cancelButton);
+            }
+
+            bookingsContainer.appendChild(card);
+        });
+
+    } catch (error) {
+        setMessage(
+            bookingsMessage,
+            error.message || "Unable to load bookings.",
+            true
+        );
+    }
+}
+
+// ========================================
+// CANCEL BOOKING
+// ========================================
+
+async function cancelBooking(booking, button) {
+    if (
+        !loggedIn ||
+        booking.booking_status === "cancelled"
+    ) {
+        return;
+    }
+
+    const confirmed = window.confirm(
+        "Are you sure you want to cancel Booking #" +
+        booking.booking_id +
+        " for " +
+        booking.event_name +
+        "?"
+    );
+
+    if (!confirmed) return;
+
+    button.disabled = true;
+    button.textContent = "Cancelling...";
+
+    try {
+        const { response, result } = await getJson(
+            apiBase +
+            "bookings.php?id=" +
+            encodeURIComponent(booking.booking_id),
+            {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-Requested-With": "XMLHttpRequest"
+                },
+                body: JSON.stringify({
+                    quantity: Number(booking.quantity),
+                    booking_status: "cancelled"
+                })
+            }
+        );
+
+        if (!response.ok || !result.success) {
+            if (response.status === 401) {
+                clearLoginState();
+            }
+
+            throw new Error(
+                result.message ||
+                "Unable to cancel booking."
+            );
+        }
+
+        await Promise.all([
+            loadBookings(),
+            loadEvents()
+        ]);
+
+        setMessage(
+            bookingsMessage,
+            "Booking #" +
+            booking.booking_id +
+            " cancelled successfully."
+        );
+
+    } catch (error) {
+        setMessage(
+            bookingsMessage,
+            error.message || "Cancellation failed.",
+            true
+        );
+
+        button.disabled = false;
+        button.textContent = "Cancel Booking";
+    }
+}
+
+// ========================================
+// LOGIN
+// REDIRECT ONLY AFTER SUCCESSFUL LOGIN
+// ========================================
+
+loginForm.addEventListener(
+    "submit",
+    async function(event) {
+        event.preventDefault();
+
+        const button = this.querySelector(
+            'button[type="submit"]'
+        );
+
+        button.disabled = true;
+        setMessage(loginMessage, "Logging in...");
+
+        try {
+            const { response, result } = await getJson(
+                apiBase + "login.php",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        email: document.getElementById(
+                            "email"
+                        ).value.trim(),
+
+                        password: document.getElementById(
+                            "password"
+                        ).value
+                    })
+                }
+            );
+
+            if (!response.ok || !result.success) {
+                throw new Error(
+                    result.message || "Login failed."
+                );
+            }
+
+            loggedIn = true;
+            currentUser = result.data;
+
+            document.getElementById("password").value = "";
+
+            updateAuthUI();
+
+            // Organiser and Admin:
+            // Redirect only after a new successful login.
+            if (redirectAfterLogin()) {
+                return;
+            }
+
+            // Customer:
+            // Stay on the EventHub homepage.
+            await loadBookings();
+
+            window.location.hash = "#my-bookings";
+
+        } catch (error) {
+            setMessage(
+                loginMessage,
+                error.message || "Login failed.",
+                true
+            );
+
+        } finally {
+            button.disabled = false;
+        }
+    }
+);
+
+// ========================================
+// CREATE BOOKING
+// ========================================
+
+bookingForm.addEventListener(
+    "submit",
+    async function(event) {
+        event.preventDefault();
+
+        if (!selectedEvent || !loggedIn) return;
+
+        if (currentUser?.role !== "customer") {
+            setMessage(
+                bookingMessage,
+                "Only customers can create bookings.",
+                true
+            );
+
+            return;
+        }
+
+        const quantity =
+            Number(bookingQuantity.value);
+
+        if (
+            !Number.isSafeInteger(quantity) ||
+            quantity < 1 ||
+            quantity >
+                Number(selectedEvent.available_tickets)
+        ) {
+            setMessage(
+                bookingMessage,
+                "Enter a valid ticket quantity.",
+                true
+            );
+
+            return;
+        }
+
+        const button =
+            document.getElementById("confirmBooking");
+
+        button.disabled = true;
+
+        setMessage(
+            bookingMessage,
+            "Creating booking..."
+        );
+
+        try {
+            const { response, result } = await getJson(
+                apiBase + "bookings.php",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-Requested-With": "XMLHttpRequest"
+                    },
+                    body: JSON.stringify({
+                        event_id: Number(
+                            selectedEvent.event_id
+                        ),
+                        quantity: quantity
+                    })
+                }
+            );
+
+            if (!response.ok || !result.success) {
+                if (response.status === 401) {
+                    clearLoginState();
+                }
+
+                throw new Error(
+                    result.message || "Booking failed."
+                );
+            }
+
+            setMessage(
+                bookingMessage,
+                "Booking confirmed! Your booking ID is " +
+                result.data.booking_id + "."
+            );
+
+            await Promise.all([
+                loadEvents(),
+                loadBookings()
+            ]);
+
+            button.textContent = "Booking Confirmed";
+
+            setTimeout(() => {
+                if (bookingDialog.open) {
+                    bookingDialog.close();
+                }
+            }, 1400);
+
+        } catch (error) {
+            setMessage(
+                bookingMessage,
+                error.message ||
+                "Unable to create booking.",
+                true
+            );
+
+        } finally {
+            button.disabled = false;
+        }
+    }
+);
+
+// ========================================
+// BUTTON EVENTS
+// ========================================
+
+document.getElementById("closeBooking").addEventListener(
+    "click",
+    () => bookingDialog.close()
+);
+
+bookingDialog.addEventListener("close", () => {
+    document.getElementById(
+        "confirmBooking"
+    ).textContent = "Confirm Booking";
+});
+
+bookingQuantity.addEventListener(
+    "input",
+    updateTotal
+);
+
+document.getElementById(
+    "refreshBookings"
+).addEventListener(
+    "click",
+    loadBookings
+);
+
+// ========================================
+// INITIALIZE
+// ========================================
+
+document.addEventListener(
+    "DOMContentLoaded",
+    async () => {
+        updateAuthUI();
+
+        // Always display the homepage.
+        // Session check updates buttons only.
+        await checkSession();
+        await loadEvents();
+    }
+);
+</script>
+
+</body>
+</html>
